@@ -1,3 +1,10 @@
+#!/bin/bash
+#SBATCH --job-name=p2pTrain
+#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
+#SBATCH --mail-type=ALL
+#SBATCH --output=/research/dept7/wlchen/guojin/tmp/Custom_pix2pix_binary_60epoch_256_ouput.txt
+#SBATCH --gres=gpu:1
+
 /research/dept7/wlchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG custom \

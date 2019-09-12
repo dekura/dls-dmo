@@ -172,6 +172,8 @@ def batch_intersection_union(output, target, nclass):
         predict: input 4D tensor
         target: label 3D tensor
         nclass: number of categories (int)
+
+        output is predicted
     """
     _, predict = torch.max(output, 1)
     mini = 1
