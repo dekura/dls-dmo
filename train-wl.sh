@@ -1,4 +1,4 @@
-/research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
+python train.py \
 --gpu_ids 0 \
 --netG custom \
 --netD n_layers \
@@ -18,7 +18,7 @@
 --output_nc 1 \
 --init_type kaiming \
 --norm batch \
---dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
+--dataroot /research/dept7/wlchen/guojin/dataset-opc/Binary \
 --name Custom_pix2pix_binary_60epoch_256 \
 --model pix2pix \
 --direction AtoB \

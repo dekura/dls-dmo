@@ -68,6 +68,7 @@ if __name__ == '__main__':
         gnd = data['B']
         pred =  visuals['fake_B']
         # print(gnd)
+        # metric.update(gnd+1, pred+1)
         metric.update(gnd+1, pred+1)
         pixAcc, mIoU = metric.get()
         tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (pixAcc, mIoU))

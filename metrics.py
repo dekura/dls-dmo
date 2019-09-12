@@ -310,3 +310,8 @@ def intersection_and_union(im_pred, im_lab, num_class):
 #                                range=(1, num_class - 1))
 #     area_union = area_pred + area_lab - area_inter
 #     return area_inter, area_union
+
+
+if __name__ == "__main__":
+    metrics = SegmentationMetric(2)
+    
