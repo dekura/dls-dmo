@@ -1,10 +1,3 @@
-#!/bin/bash
-#SBATCH --job-name=p100
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/Custom_pix2pix_binary_100epoch_8batch_256_ouput.txt
-#SBATCH --gres=gpu:1
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG custom \
