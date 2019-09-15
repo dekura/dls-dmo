@@ -5,7 +5,7 @@
 --load_size 256 \
 --crop_size 256 \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name Custom_pix2pix_binary_60epoch_256 \
+--name Custom_pix2pix_binary_100epoch_8batch_256 \
 --model pix2pix \
 --netG custom \
 --output_nc 1 \

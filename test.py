@@ -52,9 +52,8 @@ if __name__ == '__main__':
     # test with eval mode. This only affects layers like batchnorm and dropout.
     # For [pix2pix]: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
-    metric = SegmentationMetric(1)
+    metric = SegmentationMetric(2)
     tbar = tqdm(dataset)
-
     if opt.eval:
         model.eval()
 
@@ -65,13 +64,21 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
+
+        """
+        because the data in picture was divided into binary with [-1, 1]
+        we need to set the label to [0,1]
+        """
         gnd = data['B']
         pred =  visuals['fake_B']
-        # print(gnd)
-        # metric.update(gnd+1, pred+1)
-        metric.update(gnd+1, pred+1)
-        pixAcc, mIoU = metric.get()
-        tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (pixAcc, mIoU))
+        gnd[gnd > 0] = 0
+        pred[pred > 0] = 0
+        gnd = gnd.cpu().numpy() + 1
+        pred = pred.cpu().numpy() + 1
+
+        metric.update(pred,gnd)
+        acc_cls, mean_iu = metric.get()
+        tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (acc_cls, mean_iu))
         # if i % 5 == 0:  # save images to an HTML file
         #     print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
