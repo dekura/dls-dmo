@@ -22,12 +22,31 @@ def parse_args():
         '--rootDir',
         dest='rootDir',
         help='root path of your image',
-        default='/Users/dekura/Downloads/Custom_pix2pix_binary_100epoch_8batch_256/test_latest/images/'
+        default='/Users/dekura/Downloads/UNetNested_pix2pix_binary_100epoch_8batch_256/test_100/images/'
+    )
+    parser.add_argument(
+        '--filePath',
+        dest='filePath',
+        help='using file path directly',
+        default=False
     )
     return parser.parse_args()
 
 # imgfile = input("请输入图片名：")
-def saveLabel2Txt(id, nob, rootDir):
+def saveLabel2Txt(id, nob, rootDir, filePath):
+    if filePath:
+        imgB = cv2.imread(filePath, cv2.IMREAD_COLOR)
+        fnameB = open(filePath+'.txt','w')
+        Xlenth = imgB.shape[1]#图片列数
+        Ylenth = imgB.shape[0]#图片行数
+        for i in range(Ylenth):
+        # fname.write(str(a) + ':'+'\n')#----5
+            for j in range(Xlenth):
+                fnameB.write(str(imgB[i][j][0])+' ')
+                # a += 1#----6
+            fnameB.write('\n')
+        fnameB.close()
+        return
     imgfileB = 'via{}_mb_mb_lccout.oas.gds_fake_B.png'.format(id)
     imgfileA = 'via{}_mb_mb_lccout.oas.gds_real_A.png'.format(id)
     # txtfile = input("请输入存储文本文件名：")
@@ -125,4 +144,4 @@ def saveLabel2Txt(id, nob, rootDir):
 
 if __name__ == '__main__':
     args = parse_args()
-    saveLabel2Txt(args.id, args.nob,args.rootDir)
+    saveLabel2Txt(args.id, args.nob,args.rootDir,args.filePath)

@@ -1,10 +1,3 @@
-#!/bin/bash
-#SBATCH --job-name=dcsmall
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_small_pix2pix_binary_100epoch_4batch_256_output.txt
-#SBATCH --gres=gpu:1
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG dc_unet_nested \

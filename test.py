@@ -27,6 +27,8 @@ See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-p
 See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
 """
 import os
+import time
+import numpy as np
 from options.test_options import TestOptions
 from data import create_dataset
 from models import create_model
@@ -34,6 +36,19 @@ from util.visualizer import save_images
 from util import html
 from metrics import SegmentationMetric
 from tqdm import tqdm
+
+
+
+def save_result2txt(path,pixAcc,mIoU):
+    f = open(path,'a')
+    f.write('testing time : {} \n'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    f.write('pixAcc: {}, mIoU: {} \n \n'.format(pixAcc,mIoU))
+    f.close()
+
+def save_np2txt(arr,path):
+    arr = arr[0][0].cpu().numpy()
+
+    np.savetxt(path,arr)
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
@@ -49,6 +64,9 @@ if __name__ == '__main__':
     # create a website
     web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))  # define the website directory
     webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
+
+    # create a txt to save the testing results
+    txt_path = web_dir + '/{}_epoch_{}.txt'.format(opt.name,opt.epoch)
     # test with eval mode. This only affects layers like batchnorm and dropout.
     # For [pix2pix]: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
@@ -56,9 +74,11 @@ if __name__ == '__main__':
     tbar = tqdm(dataset)
     if opt.eval:
         model.eval()
-
+    finalAcc , finalmIoU = 0, 0
     for i, data in enumerate(tbar):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
+            break
+        if i >= 2:
             break
         model.set_input(data)  # unpack data from data loader
         model.test()           # run inference
@@ -71,15 +91,33 @@ if __name__ == '__main__':
         """
         gnd = data['B']
         pred =  visuals['fake_B']
-        gnd[gnd > 0] = 0
-        pred[pred > 0] = 0
-        gnd = gnd.cpu().numpy() + 1
-        pred = pred.cpu().numpy() + 1
+        # print(img_path)
+        (filepath,tempfilename) = os.path.split(img_path[0])
+        (filename,extension) = os.path.splitext(tempfilename)
 
-        metric.update(pred,gnd)
+        base_path = '/research/dept7/glchen/tmp/debug/'
+        gnd_path = base_path + filename + '_real_b.txt'
+        pred_path = base_path + filename + '_fake_b.txt'
+        print(gnd_path)
+        print(pred_path)
+        save_np2txt(gnd, gnd_path)
+        save_np2txt(pred, pred_path)
+
+        gnd[gnd < 0] = 0
+        pred[pred < 0] = 0
+        gnd[gnd > 0] = 1
+        pred[pred > 0] = 1
+        gnd = gnd.cpu().numpy()
+        pred = pred.cpu().numpy()
+
+        metric.update(pred, gnd)
         acc_cls, mean_iu = metric.get()
         tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (acc_cls, mean_iu))
+        if i == opt.num_test - 1:
+            finalAcc = acc_cls
+            finalmIoU = mean_iu
         # if i % 5 == 0:  # save images to an HTML file
         #     print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     webpage.save()  # save the HTML
+    save_result2txt(txt_path, finalAcc, finalmIoU)

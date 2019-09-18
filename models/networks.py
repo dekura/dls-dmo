@@ -3,6 +3,9 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
+from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
+from .NestedUnet import NestedUNet
+# from .Unet_Nested import UNetNested
 import numpy as np
 
 
@@ -156,7 +159,13 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'unet_256':
         net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'custom':
+        # not change anything
         net = CustomGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG == 'unet_nested':
+        # not good testing
+        net = UnetNestedGenerator(input_nc)
+    elif netG == 'dc_unet_nested':
+        net = DCGANUnetNestedGenerator(input_nc)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
@@ -501,7 +510,26 @@ class CustomGenerator(nn.Module):
         """Standard forward"""
         return self.model(input)
 
-
+def UnetNestedGenerator(input_nc):
+    """create a unet_nested model"""
+    return NestedUNet(input_nc = input_nc)
+    # def __init__(self, input_nc):
+    #     """
+    #     Construct a unet_nested structure
+    #     :parameter
+    #         input_nc(int) : input channel
+    #     """
+    #     super(UnetNestedGenerator, self).__init__()
+    #
+    #     # construct unet_nested structure
+    #     self.model = NestedUNet(input_nc = input_nc)
+    #     # self.model = UNetNested(in_channels=input_nc)
+    #
+    # def forward(self, input):
+    #     return
+def DCGANUnetNestedGenerator(input_nc):
+    """create a unet_nested model"""
+    return DCGANNestedUNet(input_nc = input_nc)
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------
