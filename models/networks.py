@@ -5,6 +5,7 @@ import functools
 from torch.optim import lr_scheduler
 from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
 from .NestedUnet import NestedUNet
+from .vdsr_dcupp import VDSR_UNet
 # from .Unet_Nested import UNetNested
 import numpy as np
 
@@ -166,6 +167,8 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = UnetNestedGenerator(input_nc)
     elif netG == 'dc_unet_nested':
         net = DCGANUnetNestedGenerator(input_nc)
+    elif netG == 'vdsr_dcupp':
+        net = VDSR_UNet(input_nc)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)

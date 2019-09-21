@@ -215,6 +215,17 @@ class BaseModel(ABC):
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
+    def get_model_size_str(self):
+        res_str = ''
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                num_params = 0
+                for param in net.parameters():
+                    num_params += param.numel()
+                res_str += '[Network %s] Total number of parameters : %.3f M \n' % (name, num_params / 1e6)
+        return res_str
+
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:

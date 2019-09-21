@@ -1,3 +1,4 @@
+# 注意先修改dc u++ 的scale factor
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG dc_unet_nested \
@@ -8,15 +9,18 @@
 --dataset_mode aligned \
 --load_size 256 \
 --crop_size 256 \
---niter 50 \
---niter_decay 50 \
+--niter 75 \
+--niter_decay 75 \
 --print_freq 500 \
 --save_epoch_freq 20 \
+--continue_train \
+--epoch 140 \
+--epoch_count 141 \
 --output_nc 1 \
 --init_type kaiming \
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name dcupp_small_pix2pix_binary_100epoch_4batch_256 \
+--name dcupp_small_pix2pix_binary_150epoch_4batch_256 \
 --model pix2pix \
 --direction AtoB \
 --display_id 0 \

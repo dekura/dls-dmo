@@ -37,14 +37,39 @@ from util import html
 from metrics import SegmentationMetric
 from tqdm import tqdm
 
+def tensor2grey(input_image, imtype=np.uint8):
+    """"Converts a Tensor array into a numpy image array.
 
+    Parameters:
+        input_image (tensor) --  the input image tensor array
+        imtype (type)        --  the desired type of the converted numpy array
+    """
+    if not isinstance(input_image, np.ndarray):
+        if isinstance(input_image, torch.Tensor):  # get the data from a variable
+            image_tensor = input_image.data
+        else:
+            return input_image
+        image_numpy = image_tensor[0].cpu().float().numpy()  # convert it into a numpy array
+        if image_numpy.shape[0] == 1:  # grayscale to RGB
+            # image_numpy = np.tile(image_numpy, (3, 1, 1))
+            image_numpy[image_numpy < 0] = 0
+            image_numpy[image_numpy > 0] = 1
+            image_numpy = image_numpy * 255.0
+        # image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0  # post-processing: tranpose and scaling
+    else:  # if it is a numpy array, do nothing
+        image_numpy = input_image
+    return image_numpy.astype(imtype)
 
-def save_result2txt(path,pixAcc,mIoU, model_size_str):
+def save_result2txt(path,pixAcc,mIoU):
     f = open(path,'a')
     f.write('testing time : {} \n'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    f.write('Model Size: \n {} \n'.format(model_size_str))
     f.write('pixAcc: {}, mIoU: {} \n \n'.format(pixAcc,mIoU))
     f.close()
+
+def save_np2txt(arr,path):
+    arr = arr[0][0].cpu().numpy()
+
+    np.savetxt(path,arr)
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
@@ -57,7 +82,6 @@ if __name__ == '__main__':
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
-    model_size_str = model.get_model_size_str()
     # create a website
     web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))  # define the website directory
     webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
@@ -75,6 +99,8 @@ if __name__ == '__main__':
     for i, data in enumerate(tbar):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
+        if i >= 2:
+            break
         model.set_input(data)  # unpack data from data loader
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
@@ -84,13 +110,28 @@ if __name__ == '__main__':
         because the data in picture was divided into binary with [-1, 1]
         we need to set the label to [0,1]
         """
-        gnd = data['B'].cpu().numpy()
-        gnd[gnd > 0] = 0
-        pred = visuals['fake_B'].cpu().numpy()
-        pred[pred > 0] = 0
-        gnd += 1
-        pred += 1
-        metric.update(gnd, pred)
+        gnd = data['B']
+        pred =  visuals['fake_B']
+        # print(img_path)
+        (filepath,tempfilename) = os.path.split(img_path[0])
+        (filename,extension) = os.path.splitext(tempfilename)
+
+        base_path = '/research/dept7/glchen/tmp/debug/'
+        gnd_path = base_path + filename + '_real_b.txt'
+        pred_path = base_path + filename + '_fake_b.txt'
+        # print(gnd_path)
+        # print(pred_path)
+        # save_np2txt(gnd, gnd_path)
+        # save_np2txt(pred, pred_path)
+
+        gnd[gnd < 0] = 0
+        pred[pred < 0] = 0
+        gnd[gnd > 0] = 1
+        pred[pred > 0] = 1
+        gnd = gnd.cpu().numpy()
+        pred = pred.cpu().numpy()
+
+        metric.update(pred, gnd)
         acc_cls, mean_iu = metric.get()
         tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (acc_cls, mean_iu))
         if i == opt.num_test - 1:
@@ -100,4 +141,4 @@ if __name__ == '__main__':
         #     print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     webpage.save()  # save the HTML
-    save_result2txt(txt_path, finalAcc, finalmIoU, model_size_str)
+    save_result2txt(txt_path, finalAcc, finalmIoU)
