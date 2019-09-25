@@ -6,13 +6,14 @@
 --load_size 256 \
 --crop_size 256 \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name vdsr_dcupp_pix2pix_100epoch_4batch_l1loss \
+--name dcupp_pix2pix_100epoch_canny_nograd \
 --model pix2pix \
---netG vdsr_dcupp \
+--netG dc_unet_nested \
 --output_nc 1 \
 --direction AtoB \
 --dataset_mode aligned \
 --eval \
 --epoch 100 \
 --num_test 2170 \
---norm batch
+--norm batch \
+--use_canny_loss True

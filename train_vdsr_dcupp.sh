@@ -17,7 +17,7 @@
 --init_type kaiming \
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name vdsr_dcupp_pix2pix_binary_100epoch_4batch_256 \
+--name vdsr_dcupp_pix2pix_100epoch_4batch_l1loss_lambda10 \
 --model pix2pix \
 --direction AtoB \
 --display_id 0 \

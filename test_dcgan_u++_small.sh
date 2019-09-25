@@ -13,6 +13,6 @@
 --direction AtoB \
 --dataset_mode aligned \
 --eval \
---epoch 100 \
+--epoch 80 \
 --num_test 2170 \
 --norm batch

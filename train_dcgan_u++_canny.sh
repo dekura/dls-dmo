@@ -1,10 +1,4 @@
-#!/bin/bash
-#SBATCH --job-name=cyngd
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_pix2pix_100epoch_canny_nograd_output.txt
-#SBATCH --gres=gpu:1
-
+# 注意先修改dc u++ 的scale factor
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG dc_unet_nested \
@@ -23,7 +17,7 @@
 --init_type kaiming \
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name dcupp_pix2pix_100epoch_canny_nograd \
+--name dcupp_pix2pix_100epoch_canny \
 --model pix2pix \
 --direction AtoB \
 --display_id 0 \

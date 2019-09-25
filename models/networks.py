@@ -5,7 +5,8 @@ import functools
 from torch.optim import lr_scheduler
 from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
 from .NestedUnet import NestedUNet
-from .vdsr_dcupp import VDSR_UNet
+from .vdsr_dcupp import NestedUNet_VDSR, VDSRNet
+from .canny_net import Net as CannyNet
 # from .Unet_Nested import UNetNested
 import numpy as np
 
@@ -120,6 +121,19 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     init_weights(net, init_type, init_gain=init_gain)
     return net
 
+def init_vdsr(vdsr, gpu_ids=[]):
+    if len(gpu_ids) > 0:
+        assert(torch.cuda.is_available())
+        vdsr.to(gpu_ids[0])
+        vdsr = torch.nn.DataParallel(vdsr, gpu_ids)  # multi-GPUs
+    return vdsr
+
+def init_canny_net(canny_net, gpu_ids=[]):
+    if len(gpu_ids) > 0:
+        assert(torch.cuda.is_available())
+        canny_net.to(gpu_ids[0])
+        canny_net = torch.nn.DataParallel(canny_net, gpu_ids)  # multi-GPUs
+    return canny_net
 
 def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[]):
     """Create a generator
@@ -168,11 +182,16 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'dc_unet_nested':
         net = DCGANUnetNestedGenerator(input_nc)
     elif netG == 'vdsr_dcupp':
-        net = VDSR_UNet(input_nc)
+        net = NestedUNet_VDSR(input_nc)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
 
+def define_vdsr(res_layer_nums = 6, gpu_ids = []):
+    return init_vdsr(VDSRNet(res_layer_nums), gpu_ids)
+
+def define_canny_net(threshold = 10.0, gpu_ids = []):
+    return init_canny_net(CannyNet(threshold), gpu_ids)
 
 def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[]):
     """Create a discriminator

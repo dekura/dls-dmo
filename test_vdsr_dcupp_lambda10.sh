@@ -6,7 +6,7 @@
 --load_size 256 \
 --crop_size 256 \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name vdsr_dcupp_pix2pix_100epoch_4batch_l1loss \
+--name vdsr_dcupp_pix2pix_100epoch_4batch_l1loss_lambda10 \
 --model pix2pix \
 --netG vdsr_dcupp \
 --output_nc 1 \

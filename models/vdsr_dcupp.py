@@ -35,6 +35,7 @@ class VDSRNet(nn.Module):
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, sqrt(2. / n))
+        self.tanh = nn.Tanh()
 
     def make_layer(self, block, num_of_layer):
         layers = []
@@ -48,7 +49,7 @@ class VDSRNet(nn.Module):
         out = self.residual_layer(out)
         out = self.output(out)
         out = torch.add(out, residual)
-        return out
+        return self.tanh(out)
 
 
 class VGGBlock(nn.Module):
@@ -137,7 +138,7 @@ class UpConv(nn.Module):
         return self.up_conv(input)
 
 
-class NestedUNet(nn.Module):
+class NestedUNet_VDSR(nn.Module):
     def __init__(self, input_nc, deepsupervision=True, upp_scale=2):
         """
         :param args:
@@ -207,7 +208,7 @@ class NestedUNet(nn.Module):
             self.final4 = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
         else:
             self.final = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
-        # self.tanh = nn.Tanh()
+        self.tanh = nn.Tanh()
 
     def forward(self, input):
         nb_filter = self.nb_filter
@@ -235,23 +236,22 @@ class NestedUNet(nn.Module):
             output2 = self.final2(x0_2)
             output3 = self.final3(x0_3)
             output4 = self.final4(x0_4)
-            return (output1 + output2 + output3 + output4)/4
-            # return self.tanh((output1 + output2 + output3 + output4)/4)
+            # return (output1 + output2 + output3 + output4)/4
+            return self.tanh((output1 + output2 + output3 + output4)/4)
             # return [output1, output2, output3, output4]
 
         else:
-            # output = self.tanh(self.final(x0_4))
-            output = self.final(x0_4)
+            output = self.tanh(self.final(x0_4))
+            # output = self.final(x0_4)
             return output
-
-class VDSR_UNet(nn.Module):
-    def __init__(self, input_nc):
-        super().__init__()
-
-        self.dcupp = NestedUNet(input_nc)
-        self.vdsr = VDSRNet()
-        self.tanh = nn.Tanh()
-
-    def forward(self, input):
-        output = self.tanh(self.vdsr(self.dcupp(input)))
-        return output
+# class VDSR_UNet(nn.Module):
+#     def __init__(self, input_nc):
+#         super().__init__()
+#
+#         self.dcupp = NestedUNet(input_nc)
+#         self.vdsr = VDSRNet()
+#         self.tanh = nn.Tanh()
+#
+#     def forward(self, input):
+#         output = self.tanh(self.vdsr(self.dcupp(input)))
+#         return output
