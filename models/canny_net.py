@@ -10,7 +10,7 @@ from scipy.signal import gaussian
 
 
 class Net(nn.Module):
-    def __init__(self, threshold=10.0, use_cuda=True):
+    def __init__(self, threshold=1.0, use_cuda=True):
         super(Net, self).__init__()
 
         self.threshold = threshold
@@ -76,10 +76,15 @@ class Net(nn.Module):
         self.directional_filter.weight.data.copy_(torch.from_numpy(all_filters[:, None, ...]))
         self.directional_filter.bias.data.copy_(torch.from_numpy(np.zeros(shape=(all_filters.shape[0],))))
 
+        # for param in self.parameters():
+            # param.requires_grad = False
+
     def forward(self, img):
         assert img.shape[1] == 1, 'input image should be one channel'
         batch_size = img.shape[0]
-        # img[img < 0] = 0
+        img = img.clone()
+        # translate image label from [-1, 1] to [0, 1]
+        img[img < 0] = 0
         blur_horizontal = self.gaussian_filter_horizontal(img)
         blurred_img = self.gaussian_filter_vertical(blur_horizontal)
 
@@ -120,18 +125,22 @@ class Net(nn.Module):
         is_max = torch.unsqueeze(is_max, dim=1)
 
         thin_edges = grad_mag.clone()
-        thin_edges[is_max == 0] = -1.0
+        thin_edges[is_max == 0] = 0.0
 
         # THRESHOLD
 
         thresholded = thin_edges.clone()
-        thresholded[thin_edges < self.threshold] = -1.0
+        thresholded[thin_edges < self.threshold] = 0.0
 
         # early_threshold = grad_mag.clone()
         # early_threshold[grad_mag < self.threshold] = -1.0
 
         # assert grad_mag.size() == grad_orientation.size() == thin_edges.size() == thresholded.size() == early_threshold.size()
         assert grad_mag.size() == grad_orientation.size() == thin_edges.size() == thresholded.size()
+
+        # now translate back
+        # img[img <= 0.0] = -1.0
+        # thresholded[thresholded <= 0.0] = -1.0
         return thresholded
         # return blurred_img, grad_mag, grad_orientation, thin_edges, thresholded, early_threshold
 

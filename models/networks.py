@@ -7,6 +7,12 @@ from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
 from .NestedUnet import NestedUNet
 from .vdsr_dcupp import NestedUNet_VDSR, VDSRNet
 from .canny_net import Net as CannyNet
+from .dct_unet import UNet16 as DCTUNet
+from .R2AttU_Net import R2AttU_Net
+from .DCR2AttU_Net import DCR2AttU_Net
+from .t_unet import UNet16 as TUNet
+from .dcupp_nlc import NestedUNet_NLC, NestedUNet_2NLC, NestedUNet_3NLC, NestedUNet_4NLC
+from .deeplab_xception import DeepLabv3_plus
 # from .Unet_Nested import UNetNested
 import numpy as np
 
@@ -183,6 +189,24 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = DCGANUnetNestedGenerator(input_nc)
     elif netG == 'vdsr_dcupp':
         net = NestedUNet_VDSR(input_nc)
+    elif netG == 'dct_unet':
+        net = DCTUNet()
+    elif netG == 't_unet':
+        net = TUNet()
+    elif netG == 'r2att_unet':
+        net = R2AttU_Net(img_ch=input_nc)
+    elif netG == 'dcr2att_unet':
+        net = DCR2AttU_Net(img_ch=input_nc)
+    elif netG == 'dcupp_nlc':
+        net = NestedUNet_NLC(input_nc = input_nc)
+    elif netG == 'dcupp_2nlc':
+        net = NestedUNet_2NLC(input_nc = input_nc)
+    elif netG == 'dcupp_3nlc':
+        net = NestedUNet_3NLC(input_nc = input_nc)
+    elif netG == 'dcupp_4nlc':
+        net = NestedUNet_4NLC(input_nc = input_nc)
+    elif netG == 'deeplabv3_plus':
+        net = DeepLabv3_plus(nInputChannels = input_nc, n_classes=1, pretrained=False)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
@@ -190,8 +214,11 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
 def define_vdsr(res_layer_nums = 6, gpu_ids = []):
     return init_vdsr(VDSRNet(res_layer_nums), gpu_ids)
 
-def define_canny_net(threshold = 10.0, gpu_ids = []):
-    return init_canny_net(CannyNet(threshold), gpu_ids)
+def define_canny_net(threshold = 1.0, gpu_ids = []):
+    canny_net = CannyNet(threshold)
+    for param in canny_net.parameters():
+        param.requires_grad = False
+    return init_canny_net(canny_net, gpu_ids)
 
 def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[]):
     """Create a discriminator
@@ -552,6 +579,7 @@ def UnetNestedGenerator(input_nc):
 def DCGANUnetNestedGenerator(input_nc):
     """create a unet_nested model"""
     return DCGANNestedUNet(input_nc = input_nc)
+
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------

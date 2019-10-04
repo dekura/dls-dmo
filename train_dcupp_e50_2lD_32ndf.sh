@@ -1,10 +1,3 @@
-#!/bin/bash
-#SBATCH --job-name=2lD32
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_pix2pix_e50_2layersD_32ndf_output.txt
-#SBATCH --gres=gpu:1
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG dc_unet_nested \

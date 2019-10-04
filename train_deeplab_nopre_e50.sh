@@ -1,16 +1,9 @@
-#!/bin/bash
-#SBATCH --job-name=2lD32
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_pix2pix_e50_2layersD_32ndf_output.txt
-#SBATCH --gres=gpu:1
-
+ export http_proxy=http://proxy.cse.cuhk.edu.hk:8000/
+ export TORCH_HOME=/research/dept7/glchen/.torch
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
---gpu_ids 0 \
---netG dc_unet_nested \
+--gpu_ids 0,1 \
+--netG deeplabv3_plus \
 --netD n_layers \
---n_layers_D 2 \
---ndf 32 \
 --pool_size 0 \
 --batch_size 4 \
 --preprocess resize_and_crop \
@@ -25,7 +18,7 @@
 --init_type kaiming \
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/dataset-opc/Binary \
---name dcupp_pix2pix_e50_2layersD_32ndf \
+--name deeplabv3_plus_pix2pix_50epoch \
 --model pix2pix \
 --direction AtoB \
 --display_id 0 \

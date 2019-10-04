@@ -2,7 +2,6 @@ import torch
 from .base_model import BaseModel
 from . import networks
 
-
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
@@ -30,11 +29,20 @@ class Pix2PixModel(BaseModel):
         """
         # changing the default values to match the pix2pix paper (https://phillipi.github.io/pix2pix/)
         parser.set_defaults(norm='batch', netG='unet_256', dataset_mode='aligned')
-        parser.add_argument('--use_canny_loss', type=bool, default=False, help='using canny loss for edge detection')
+        parser.add_argument('--use_canny_loss', dest='use_canny_loss', action='store_true', help='using canny loss for edge detection')
+        parser.add_argument('--no-use_canny_loss', dest='use_canny_loss', action='store_false', help='no using canny loss for edge detection')
+        parser.set_defaults(use_canny_loss=False)
+        parser.add_argument('--canny_threshold', type=float, default=10.0, help='canny net threshold')
+        parser.add_argument('--use_vdsr_loss', dest='use_vdsr_loss', action='store_true', help='using vdsr loss for edge detection, vdsr is a SR method')
+        parser.add_argument('--no-use_vdsr_loss', dest='use_vdsr_loss', action='store_false', help='no using vdsr loss for edge detection, vdsr is a SR method')
+        parser.set_defaults(use_vdsr_loss=False)
+        parser.add_argument('--vdsr_res_nums', type=float, default=18, help='nums of residual layers in vdsr')
+        # parser.add_argument('--use_bce_loss', dest='use_bce_loss', action='store_true', help='using bce loss with logits')
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
-            parser.add_argument('--lambda_Lcanny', type=float, default=100.0, help='weight for canny loss')
+            parser.add_argument('--lambda_Lcanny', type=float, default=10.0, help='weight for canny loss')
+            parser.add_argument('--lambda_Lvdsr', type=float, default=100.0, help='weight for vdsr loss')
 
         return parser
 
@@ -47,17 +55,25 @@ class Pix2PixModel(BaseModel):
         BaseModel.__init__(self, opt)
 
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
+        # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
+        self.loss_names =  ['G_GAN', 'G_L1', 'D_real', 'D_fake']
+        self.visual_names = ['real_A', 'fake_B', 'real_B']
+
         if opt.use_canny_loss:
             self.use_canny_loss = opt.use_canny_loss
-            self.CannyNet = networks.define_canny_net(1.0, self.gpu_ids)
-            self.loss_names = ['G_GAN', 'G_L1', 'G_CANNY', 'D_real', 'D_fake']
-            self.visual_names = ['real_A', 'fake_B', 'real_B', 'real_B_canny', 'fake_B_canny']
+            self.CannyNet = networks.define_canny_net(opt.canny_threshold, self.gpu_ids)
+            self.loss_names = self.loss_names + ['G_CANNY']
+            self.visual_names = self.visual_names + ['real_B_CANNY', 'fake_B_CANNY']
         else:
             self.use_canny_loss = False
-            self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
-            self.visual_names = ['real_A', 'fake_B', 'real_B']
 
-        # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
+        if opt.use_vdsr_loss:
+            self.use_vdsr_loss = True
+            self.VDSR = networks.define_vdsr(opt.vdsr_res_nums, self.gpu_ids)
+            self.loss_names = self.loss_names + ['G_VDSR']
+            self.visual_names = self.visual_names + ['real_B_VDSR', 'fake_B_VDSR']
+        else:
+            self.use_vdsr_loss = False
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
             self.model_names = ['G', 'D']
@@ -66,14 +82,6 @@ class Pix2PixModel(BaseModel):
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                       not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-
-        if opt.netG == 'vdsr_dcupp':
-            self.use_vdsr = True
-            self.VDSR = networks.define_vdsr(6, self.gpu_ids)
-        else:
-            self.use_vdsr = False
-
-
 
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -106,13 +114,13 @@ class Pix2PixModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.fake_B = self.netG(self.real_A)  # G(A)
 
-        if self.use_vdsr:
+        if self.use_vdsr_loss:
+            self.real_B_VDSR = self.VDSR(self.real_B)
             self.fake_B_VDSR = self.VDSR(self.fake_B)
 
         if self.use_canny_loss:
-            with torch.no_grad():
-                self.fake_B_canny = self.CannyNet(self.fake_B)
-                self.real_B_canny = self.CannyNet(self.real_B)
+            self.fake_B_CANNY = self.CannyNet(self.fake_B)
+            self.real_B_CANNY = self.CannyNet(self.real_B)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -135,18 +143,23 @@ class Pix2PixModel(BaseModel):
         pred_fake = self.netD(fake_AB)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G(A) = B
-        if self.use_vdsr:
-            lambda_L1_vdsr = self.opt.lambda_L1 * 0.1
-            self.loss_G_L1 = self.criterionL1(self.fake_B_VDSR, self.real_B) * lambda_L1_vdsr
-        else:
-            self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        # testing focal loss
+        # self.loss_G_L1 = self.criterionFocal(self.fake_B, self.real_B)
+        # just for testing here
+        # self.loss_G_L1 = self.criterionBCE(self.fake_B, self.real_B)
+        # Loss_G
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1
 
-        # combine loss and calculate gradients
         if self.use_canny_loss:
-            self.loss_G_CANNY = self.criterionL1(self.fake_B_canny, self.real_B_canny) * self.opt.lambda_Lcanny
-            self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_CANNY
-        else:
-            self.loss_G = self.loss_G_GAN + self.loss_G_L1
+            self.loss_G_CANNY = self.criterionL1(self.fake_B_CANNY, self.real_B_CANNY) * self.opt.lambda_Lcanny
+            self.loss_G = self.loss_G + self.loss_G_CANNY
+
+        if self.use_vdsr_loss:
+            self.loss_G_VDSR = self.criterionL1(self.fake_B_VDSR, self.real_B_VDSR) * self.opt.lambda_Lvdsr
+            self.loss_G = self.loss_G + self.loss_G_VDSR
+        # combine loss and calculate gradients
+
         self.loss_G.backward()
 
     def optimize_parameters(self):
