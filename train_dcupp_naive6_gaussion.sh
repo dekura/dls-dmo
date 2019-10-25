@@ -1,10 +1,3 @@
-#!/bin/bash
-#SBATCH --job-name=gausion
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_naive6_50epoch_gausion_output.txt
-#SBATCH --gres=gpu:1
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG dc_unet_nested \
@@ -28,4 +21,3 @@
 --direction AtoB \
 --display_id 0 \
 --upp_scale 2
-
