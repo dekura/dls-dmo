@@ -227,6 +227,8 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         net = Naive7NLayerDiscriminator(input_nc, norm_layer=norm_layer)
     elif netD == 'naive8_nl':
         net = Naive8NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive9_nl':
+        net = Naive9NLayerDiscriminator(input_nc, norm_layer=norm_layer)
     elif netD == 'pixel':     # classify if each pixel is real or fake
         net = PixelDiscriminator(input_nc, ndf, norm_layer=norm_layer)
     else:
@@ -666,8 +668,6 @@ class NLayerDiscriminator(nn.Module):
         """Standard forward."""
         return self.model(input)
 
-
-
 class NaiveNLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
 
@@ -688,23 +688,13 @@ class NaiveNLayerDiscriminator(nn.Module):
 
         kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
-        nf_mult = 1
-        nf_mult_prev = 1
-        nf_mult = min(2 ** n_layers, 8)
-        sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
-            nn.LeakyReLU(0.2, True)
-        ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
-
-
 
 class Naive2NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
@@ -726,14 +716,14 @@ class Naive2NLayerDiscriminator(nn.Module):
 
         kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
         sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.5)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
-
 
 class Naive3NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
@@ -756,21 +746,13 @@ class Naive3NLayerDiscriminator(nn.Module):
         kw = 4
         padw = 1
         sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
-        nf_mult = 1
-        nf_mult_prev = 1
-        nf_mult = min(2 ** n_layers, 8)
-        sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
-            nn.LeakyReLU(0.2, True)
-        ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.2)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
-
 
 class Naive4NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
@@ -794,13 +776,12 @@ class Naive4NLayerDiscriminator(nn.Module):
         padw = 1
         sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
         sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.8)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
-
-
 
 class Naive5NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
@@ -820,9 +801,10 @@ class Naive5NLayerDiscriminator(nn.Module):
         else:
             use_bias = norm_layer != nn.BatchNorm2d
 
-        kw = 2
+        kw = 4
         padw = 1
         sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Dropout2d(p=0.5)]
         sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
         self.model = nn.Sequential(*sequence)
 
@@ -848,15 +830,18 @@ class Naive6NLayerDiscriminator(nn.Module):
         else:
             use_bias = norm_layer != nn.BatchNorm2d
 
-        kw = 1
+        kw = 4
         padw = 1
         sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Dropout2d(p=0.5)]
         sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.5)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
+
 
 
 class Naive7NLayerDiscriminator(nn.Module):
@@ -872,15 +857,9 @@ class Naive7NLayerDiscriminator(nn.Module):
             norm_layer      -- normalization layer
         """
         super(Naive7NLayerDiscriminator, self).__init__()
-        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
-            use_bias = norm_layer.func != nn.BatchNorm2d
-        else:
-            use_bias = norm_layer != nn.BatchNorm2d
-
-        kw = 8
+        kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
-        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence = [nn.Conv2d(input_nc, 1, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
@@ -902,20 +881,15 @@ class Naive8NLayerDiscriminator(nn.Module):
             norm_layer      -- normalization layer
         """
         super(Naive8NLayerDiscriminator, self).__init__()
-        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
-            use_bias = norm_layer.func != nn.BatchNorm2d
-        else:
-            use_bias = norm_layer != nn.BatchNorm2d
-
-        kw = 16
+        kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
-        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence = [nn.Conv2d(input_nc, 1, kernel_size=kw, stride=1, padding=padw)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
+
 
 
 class Naive9NLayerDiscriminator(nn.Module):
@@ -931,20 +905,18 @@ class Naive9NLayerDiscriminator(nn.Module):
             norm_layer      -- normalization layer
         """
         super(Naive9NLayerDiscriminator, self).__init__()
-        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
-            use_bias = norm_layer.func != nn.BatchNorm2d
-        else:
-            use_bias = norm_layer != nn.BatchNorm2d
-
         kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
-        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence = [nn.Conv2d(input_nc, 1, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Dropout2d(p=0.5)]
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
+
+
+
 class PixelDiscriminator(nn.Module):
     """Defines a 1x1 PatchGAN discriminator (pixelGAN)"""
 

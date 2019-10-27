@@ -166,12 +166,66 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         # not good testing
         net = UnetNestedGenerator(input_nc)
     elif netG == 'dc_unet_nested':
-        net = DCGANUnetNestedGenerator(input_nc)
+        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_o=1)
     elif netG == 'vdsr_dcupp':
         net = VDSR_UNet(input_nc)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
+
+
+def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[]):
+    """Create a generator
+
+    Parameters:
+        input_nc (int) -- the number of channels in input images
+        output_nc (int) -- the number of channels in output images
+        ngf (int) -- the number of filters in the last conv layer
+        netG0 (str) -- the architecture's name: resnet_9blocks | resnet_6blocks | unet_256 | unet_128
+        norm (str) -- the name of normalization layers used in the network: batch | instance | none
+        use_dropout (bool) -- if use dropout layers.
+        init_type (str)    -- the name of our initialization method.
+        init_gain (float)  -- scaling factor for normal, xavier and orthogonal.
+        gpu_ids (int list) -- which GPUs the network runs on: e.g., 0,1,2
+
+    Returns a generator
+
+    Our current implementation provides two types of generators:
+        U-Net: [unet_128] (for 128x128 input images) and [unet_256] (for 256x256 input images)
+        The original U-Net paper: https://arxiv.org/abs/1505.04597
+
+        Resnet-based generator: [resnet_6blocks] (with 6 Resnet blocks) and [resnet_9blocks] (with 9 Resnet blocks)
+        Resnet-based generator consists of several Resnet blocks between a few downsampling/upsampling operations.
+        We adapt Torch code from Justin Johnson's neural style transfer project (https://github.com/jcjohnson/fast-neural-style).
+
+
+    The generator has been initialized by <init_net>. It uses RELU for non-linearity.
+    """
+    net = None
+    norm_layer = get_norm_layer(norm_type=norm)
+
+    if netG0 == 'resnet_9blocks':
+        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9)
+    elif netG0 == 'resnet_6blocks':
+        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6)
+    elif netG0 == 'unet_128':
+        net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG0 == 'unet_256':
+        net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG0 == 'custom':
+        # not change anything
+        net = CustomGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG0 == 'unet_nested':
+        # not good testing
+        net = UnetNestedGenerator(input_nc)
+    elif netG0 == 'dc_unet_nested':
+        net = DCGANUnetNestedGenerator(input_nc, output_nc=1, lambda_o=100)
+    elif netG0 == 'vdsr_dcupp':
+        net = VDSR_UNet(input_nc)
+    else:
+        raise NotImplementedError('Generator0 model name [%s] is not recognized' % netG0)
+    return init_net(net, init_type, init_gain, gpu_ids)
+
 
 
 def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[]):
@@ -548,9 +602,9 @@ def UnetNestedGenerator(input_nc):
     #
     # def forward(self, input):
     #     return
-def DCGANUnetNestedGenerator(input_nc):
+def DCGANUnetNestedGenerator(input_nc, output_nc, lambda_o):
     """create a unet_nested model"""
-    return DCGANNestedUNet(input_nc = input_nc)
+    return DCGANNestedUNet(input_nc = input_nc, output_nc=output_nc, lambda_o=lambda_o)
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------

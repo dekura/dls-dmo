@@ -97,7 +97,7 @@ class UpConv(nn.Module):
         return self.up_conv(input)
 
 class NestedUNet(nn.Module):
-    def __init__(self, input_nc, deepsupervision=True, upp_scale=2):
+    def __init__(self, input_nc, output_nc=1, lambda_o=1, tanh_act=True, deepsupervision=True, upp_scale=2):
         """
         :param args:
             input_channels
@@ -106,7 +106,10 @@ class NestedUNet(nn.Module):
         super().__init__()
 
         self.input_nc = input_nc
+        self.output_nc = output_nc
         self.deepsupervision = deepsupervision
+        self.tanh_act = tanh_act
+        self.lambda_o = lambda_o
 
         nb_filter = [64, 128, 256, 512, 1024]
         nb_filter = [int(x / upp_scale) for x in nb_filter]
@@ -160,13 +163,15 @@ class NestedUNet(nn.Module):
         self.conv0_4 = VGGBlock(nb_filter[0]*4+nb_filter[1], nb_filter[0], nb_filter[0])
 
         if self.deepsupervision:
-            self.final1 = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
-            self.final2 = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
-            self.final3 = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
-            self.final4 = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
+            self.final1 = nn.Conv2d(nb_filter[0], self.output_nc, kernel_size=1)
+            self.final2 = nn.Conv2d(nb_filter[0], self.output_nc, kernel_size=1)
+            self.final3 = nn.Conv2d(nb_filter[0], self.output_nc, kernel_size=1)
+            self.final4 = nn.Conv2d(nb_filter[0], self.output_nc, kernel_size=1)
         else:
-            self.final = nn.Conv2d(nb_filter[0], 1, kernel_size=1)
-        self.tanh = nn.Tanh()
+            self.final = nn.Conv2d(nb_filter[0], self.output_nc, kernel_size=1)
+
+        if self.tanh_act:
+            self.tanh = nn.Tanh()
 
     def forward(self, input):
         nb_filter = self.nb_filter
@@ -194,9 +199,20 @@ class NestedUNet(nn.Module):
             output2 = self.final2(x0_2)
             output3 = self.final3(x0_3)
             output4 = self.final4(x0_4)
-            return self.tanh((output1 + output2 + output3 + output4)/4)
+            output = (output1 + output2 + output3 + output4)/4
+            output = output * self.lambda_o
+            if self.tanh_act:
+                return self.tanh(output)
+            else:
+                return (output1 + output2 + output3 + output4)/4
             # return [output1, output2, output3, output4]
 
         else:
-            output = self.tanh(self.final(x0_4))
+            if self.tanh_act:
+                output = self.final(x0_4)
+                output = output * self.lambda_o
+                output = self.tanh(output)
+            else:
+                output = self.final(x0_4)
+                output = output * self.lambda_o
             return output
