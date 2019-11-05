@@ -36,6 +36,7 @@ from util.visualizer import save_images
 from util import html
 from metrics import SegmentationMetric
 from tqdm import tqdm
+import imageio
 
 
 
@@ -75,6 +76,8 @@ if __name__ == '__main__':
     for i, data in enumerate(tbar):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
+        # if i>=1:
+        #     break
         model.set_input(data)  # unpack data from data loader
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
@@ -86,10 +89,22 @@ if __name__ == '__main__':
         """
         gnd = data['B'].cpu().numpy()
         gnd[gnd > 0] = 0
+        gnd += 1
         pred = visuals['fake_B'].cpu().numpy()
         pred[pred > 0] = 0
-        gnd += 1
         pred += 1
+        # gnd = gnd/2
+        # red layer
+        # gnd = gnd[0][0]
+        # pred += 1
+        # pred = pred/2
+        # red layer
+        # pred = pred[0][0]
+        # imageio.imwrite('/research/dept7/glchen/tmp/debug/pred.png', pred[0].reshape((256, 256, -1)))
+        # gnd = data['B'].cpu().numpy()
+        # pred = visuals['fake_B'].cpu().numpy()
+        # print('gnd max {}, gnd min {}'.format(np.max(gnd),np.min(gnd)))
+        # print('pred max {}, pred min {}'.format(np.max(pred),np.min(pred)))
         metric.update(gnd, pred)
         acc_cls, mean_iu = metric.get()
         tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (acc_cls, mean_iu))
