@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=2sl10
+#SBATCH --job-name=nosraf
 #SBATCH --mail-user=glchen@cse.cuhk.edu.hk
 #SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_dcupp_naive6_50epoch_c1_l1_10_output.txt
+#SBATCH --output=/research/dept7/glchen/tmp/dcupp2wr_naive6_50epoch_c3.txt
 #SBATCH --gres=gpu:2
 
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
@@ -20,15 +20,16 @@
 --niter_decay 25 \
 --print_freq 500 \
 --save_epoch_freq 25 \
---input_nc 1 \
---output_nc 1 \
+--input_nc 3 \
+--output_nc 3 \
 --init_type kaiming \
 --norm batch \
---dataroot /research/dept7/glchen/datasets/design_contour_paired/combine_AB \
---netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_50epoch_c1/50_net_G.pth \
---name dcupp_dcupp_naive6_50epoch_c1_l1_10 \
---model stage2 \
+--dataroot /research/dept7/glchen/datasets/design_contour_paired_rgb/combine_AB \
+--netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_50epoch_c3/50_net_G.pth \
+--name dcupp2wr_naive6_50epoch_c3 \
+--model stage2wr \
 --direction AtoB \
 --display_id 0 \
 --upp_scale 2 \
---lambda_L1 10
+--lambda_tanh_scale 1 \
+--lambda_L1 1000.0

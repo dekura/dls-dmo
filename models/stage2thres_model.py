@@ -3,7 +3,7 @@ from .base_model import BaseModel
 from . import networks
 
 
-class Stage2Model(BaseModel):
+class Stage2ThresModel(BaseModel):
     """ This class implements the stage2 model, for learning a mapping from input images to output images given paired data.
     Learning the mapping from design and imagine a middle output, than make the middle output into the lithogan before.
 
@@ -66,6 +66,9 @@ class Stage2Model(BaseModel):
         self.set_requires_grad(self.netG, False)  # G requires no gradients when optimizing G0
         self.netG.eval()
 
+        self.threshold = torch.nn.Threshold(0.9, -1)
+
+
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
@@ -103,6 +106,7 @@ class Stage2Model(BaseModel):
         # self.opc_A[self.opc_A < 0] = -1
         # self.opc_A[self.opc_A > 0] = 1
         self.fake_B = self.netG(self.opc_A)  # G(A)
+        self.fake_B = self.threshold(self.fake_B)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""

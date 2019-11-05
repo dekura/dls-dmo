@@ -6,7 +6,10 @@ from torch.optim import lr_scheduler
 from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
 from .NestedUnet import NestedUNet
 from .vdsr_dcupp import VDSR_UNet
-# from .Unet_Nested import UNetNested
+from .ShuffleNestedUnet import NestedUNet as ShuffleNestedUnet
+from .ShuffleNestedUnet import UNet as ShuffleUnet
+from .ThresNestedUnet import NestedUNet as ThresNestedUnet
+from .ReluNestedUnet import NestedUNet as ReluNestedUnet
 import numpy as np
 
 
@@ -174,7 +177,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     return init_net(net, init_type, init_gain, gpu_ids)
 
 
-def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[]):
+def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], lambda_tanh_scale=1.0):
     """Create a generator
 
     Parameters:
@@ -219,7 +222,15 @@ def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, 
         # not good testing
         net = UnetNestedGenerator(input_nc)
     elif netG0 == 'dc_unet_nested':
-        net = DCGANUnetNestedGenerator(input_nc, output_nc=1, lambda_o=100)
+        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_o=lambda_tanh_scale)
+    elif netG0 == 'shuffle_dcupp':
+        net = ShuffleNestedUnet(input_nc)
+    elif netG0 == 'shuffle_unet':
+        net = ShuffleUnet(input_nc)
+    elif netG0 == 'thres_dcupp':
+        net = ThresNestedUnet(input_nc)
+    elif netG0 == 'relu_dcupp':
+        net = ReluNestedUnet(input_nc)
     elif netG0 == 'vdsr_dcupp':
         net = VDSR_UNet(input_nc)
     else:

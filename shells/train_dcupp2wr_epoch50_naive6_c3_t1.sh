@@ -1,10 +1,3 @@
-#!/bin/bash
-#SBATCH --job-name=r15t15
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp2wr_naive6_50epoch_c3_opcr15_t15.txt
-#SBATCH --gres=gpu:1
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG0 dc_unet_nested \
@@ -26,12 +19,10 @@
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/design_contour_paired_rgb/combine_AB \
 --netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_50epoch_c3/50_net_G.pth \
---name dcupp2wr_naive6_50epoch_c3_opcr15_t15 \
+--name dcupp2wr_naive6_50epoch_c3 \
 --model stage2wr \
 --direction AtoB \
 --display_id 0 \
 --upp_scale 2 \
---lambda_tanh_scale 15.0 \
---lambda_L1 100.0 \
---lambda_R 15
-
+--lambda_tanh_scale 1 \
+--lambda_L1 1000.0

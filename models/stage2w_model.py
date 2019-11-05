@@ -2,8 +2,11 @@ import torch
 from .base_model import BaseModel
 from . import networks
 
+"""
+stage2W model means stage2 model add weighted loss on different layer
+"""
 
-class Stage2Model(BaseModel):
+class Stage2WModel(BaseModel):
     """ This class implements the stage2 model, for learning a mapping from input images to output images given paired data.
     Learning the mapping from design and imagine a middle output, than make the middle output into the lithogan before.
 
@@ -35,6 +38,10 @@ class Stage2Model(BaseModel):
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
+            parser.add_argument('--lambda_W', type=float, default=100.0, help='weight for layer')
+            parser.add_argument('--lambda_W_layer', type=int, default=0, help='weight layer 0: red, 1: green, 2: blue ')
+            parser.add_argument('--lambda_B_layer', type=int, default=0, help='blue weight layer 0: no, 2: blue layer')
+            parser.add_argument('--lambda_B', type=float, default=10.0, help='blue layer weight')
 
         return parser
 
@@ -103,6 +110,7 @@ class Stage2Model(BaseModel):
         # self.opc_A[self.opc_A < 0] = -1
         # self.opc_A[self.opc_A > 0] = 1
         self.fake_B = self.netG(self.opc_A)  # G(A)
+        # print(self.fake_B.size())
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -138,7 +146,18 @@ class Stage2Model(BaseModel):
         pred_fake = self.netD(fake_AB)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G(A) = B
+        # self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        # weight_t = torch.tensor([[[[1., 1., 100.]]]])
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        layer = self.opt.lambda_W_layer
+        w_layer = self.opt.lambda_W
+        self.loss_G_L1 += self.criterionL1(self.fake_B[:, layer]*w_layer, self.real_B[:, layer]*w_layer) * self.opt.lambda_L1
+        if self.opt.lambda_B_layer == 2:
+            b_layer = self.opt.lambda_B_layer
+            b_w_layer = self.opt.lambda_B
+            self.loss_G_L1 += self.criterionL1(self.fake_B[:, b_layer]*b_w_layer, self.real_B[:, b_layer]*b_w_layer) * self.opt.lambda_L1
+        # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 1]*100, self.real_B[:, 1]*100) * self.opt.lambda_L1
+        # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 0]*10, self.real_B[:, 0]*10) * self.opt.lambda_L1
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()

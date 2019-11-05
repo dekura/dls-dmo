@@ -2,8 +2,11 @@ import torch
 from .base_model import BaseModel
 from . import networks
 
+"""
+stage2W model means stage2 model add weighted loss on different layer
+"""
 
-class Stage2Model(BaseModel):
+class Stage2WRModel(BaseModel):
     """ This class implements the stage2 model, for learning a mapping from input images to output images given paired data.
     Learning the mapping from design and imagine a middle output, than make the middle output into the lithogan before.
 
@@ -35,6 +38,8 @@ class Stage2Model(BaseModel):
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
+            parser.add_argument('--lambda_R', type=float, default=10.0, help='weight for opc red layer l1loss')
+            # parser.add_argument('--lambda_W_layer', type=int, default=0, help='weight layer 0: red, 1: green, 2: blue ')
 
         return parser
 
@@ -103,6 +108,7 @@ class Stage2Model(BaseModel):
         # self.opc_A[self.opc_A < 0] = -1
         # self.opc_A[self.opc_A > 0] = 1
         self.fake_B = self.netG(self.opc_A)  # G(A)
+        # print(self.fake_B.size())
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -138,7 +144,18 @@ class Stage2Model(BaseModel):
         pred_fake = self.netD(fake_AB)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G(A) = B
-        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        # self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        # weight_t = torch.tensor([[[[1., 1., 100.]]]])
+        red_layer = 0
+        green_layer = 1
+        blue_layer = 2
+        lambda_L1 = self.opt.lambda_L1
+        self.loss_G_L1 = self.criterionL1(self.fake_B[:, red_layer] * lambda_L1, self.real_B[:, red_layer]*lambda_L1) * self.opt.lambda_L1
+        self.loss_G_L1 += self.criterionL1(self.opc_A[:, green_layer], self.real_A[:, green_layer]) * self.opt.lambda_L1
+        self.loss_G_L1 += self.criterionL1(self.opc_A[:, red_layer], self.real_A[:, red_layer]) * self.opt.lambda_R
+        self.loss_G_L1 += self.criterionL1(self.opc_A[:, blue_layer], self.real_A[:, blue_layer]) * self.opt.lambda_L1
+        # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 1]*100, self.real_B[:, 1]*100) * self.opt.lambda_L1
+        # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 0]*10, self.real_B[:, 0]*10) * self.opt.lambda_L1
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()

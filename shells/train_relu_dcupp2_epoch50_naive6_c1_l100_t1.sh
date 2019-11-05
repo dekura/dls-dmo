@@ -1,6 +1,6 @@
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
---netG0 dc_unet_nested \
+--netG0 relu_dcupp \
 --netG dc_unet_nested \
 --netD naive6_nl \
 --pool_size 0 \
@@ -19,8 +19,9 @@
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/design_contour_paired/combine_AB \
 --netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_50epoch_c1/50_net_G.pth \
---name dcupp_dcupp_naive6_50epoch_c1 \
+--name relu_dcupp2_naive6_50epoch_c1 \
 --model stage2 \
 --direction AtoB \
 --display_id 0 \
---upp_scale 2
+--upp_scale 2 \
+--lambda_tanh_scale 1

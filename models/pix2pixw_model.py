@@ -3,13 +3,12 @@ from .base_model import BaseModel
 from . import networks
 
 
-class Stage2Model(BaseModel):
-    """ This class implements the stage2 model, for learning a mapping from input images to output images given paired data.
-    Learning the mapping from design and imagine a middle output, than make the middle output into the lithogan before.
+class Pix2PixWModel(BaseModel):
+    """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
     The model training requires '--dataset_mode aligned' dataset.
-    By default, it uses a '--netG dcupp' U++ by dcupp generator
-    a '--netD naive6' discriminator (PatchGAN),
+    By default, it uses a '--netG unet256' U-Net generator,
+    a '--netD basic' discriminator (PatchGAN),
     and a '--gan_mode' vanilla GAN loss (the cross-entropy objective used in the orignal GAN paper).
 
     pix2pix paper: https://arxiv.org/pdf/1611.07004.pdf
@@ -31,10 +30,11 @@ class Stage2Model(BaseModel):
         """
         # changing the default values to match the pix2pix paper (https://phillipi.github.io/pix2pix/)
         parser.set_defaults(norm='batch', netG='unet_256', dataset_mode='aligned')
-        parser.add_argument('--lambda_tanh_scale', type=float, default=1.0, help='scale factor for tanh scale')
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
+            parser.add_argument('--lambda_W', type=float, default=100.0, help='weight for layer')
+            parser.add_argument('--lambda_W_layer', type=int, default=0, help='weight layer 0: red, 1: green, 2: blue ')
 
         return parser
 
@@ -48,23 +48,15 @@ class Stage2Model(BaseModel):
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
-        self.visual_names = ['real_A', 'opc_A', 'fake_B', 'real_B']
+        self.visual_names = ['real_A', 'fake_B', 'real_B']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
-            self.model_names = ['G0', 'G', 'D']
+            self.model_names = ['G', 'D']
         else:  # during test time, only load G
-            self.model_names = ['G0', 'G']
-
-        # define networks of stage1, only the generator.
-        self.netG0 = networks.define_G0(opt.input_nc, opt.output_nc, opt.ngf, opt.netG0, opt.norm,
-                                      not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, opt.lambda_tanh_scale)
+            self.model_names = ['G']
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                       not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-        if opt.netG_pretrained_path is not '':
-            self.netG.module.load_state_dict(torch.load(opt.netG_pretrained_path))
-        self.set_requires_grad(self.netG, False)  # G requires no gradients when optimizing G0
-        self.netG.eval()
 
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -75,11 +67,9 @@ class Stage2Model(BaseModel):
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
-            self.optimizer_G0 = torch.optim.Adam(filter(lambda p: p.requires_grad, self.netG0.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
-            # self.optimizer_G = torch.optim.Adam(filter(lambda p: p.requires_grad, self.netG.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizers.append(self.optimizer_G0)
-            # self.optimizers.append(self.optimizer_G)
+            self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
     def set_input(self, input):
@@ -97,12 +87,7 @@ class Stage2Model(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        self.opc_A = self.netG0(self.real_A)
-        # print("opc_A的最小值：", torch.min(self.opc_A))
-        # print("opc_A的最大值：", torch.max(self.opc_A))
-        # self.opc_A[self.opc_A < 0] = -1
-        # self.opc_A[self.opc_A > 0] = 1
-        self.fake_B = self.netG(self.opc_A)  # G(A)
+        self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -126,19 +111,9 @@ class Stage2Model(BaseModel):
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
-        # combine loss and calculate gradients
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1
-        self.loss_G.backward()
-
-
-    def backward_G0(self):
-        """Calculate GAN and L1 loss for the generator"""
-        # First, G(A) should fake the discriminator
-        fake_AB = torch.cat((self.real_A, self.fake_B), 1)
-        pred_fake = self.netD(fake_AB)
-        self.loss_G_GAN = self.criterionGAN(pred_fake, True)
-        # Second, G(A) = B
-        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        layer = self.opt.lambda_W_layer
+        w_layer = self.opt.lambda_W
+        self.loss_G_L1 += self.criterionL1(self.fake_B[:, layer]*w_layer, self.real_B[:, layer]*w_layer) * self.opt.lambda_L1
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()
@@ -152,8 +127,6 @@ class Stage2Model(BaseModel):
         self.optimizer_D.step()          # update D's weights
         # update G
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.set_requires_grad(self.netG, False)  # G requires no gradients when optimizing G0
-        self.netG.eval()
-        self.optimizer_G0.zero_grad()        # set G's gradients to zero
-        self.backward_G0()                   # calculate graidents for G
-        self.optimizer_G0.step()             # udpate G's weights
+        self.optimizer_G.zero_grad()        # set G's gradients to zero
+        self.backward_G()                   # calculate graidents for G
+        self.optimizer_G.step()             # udpate G's weights

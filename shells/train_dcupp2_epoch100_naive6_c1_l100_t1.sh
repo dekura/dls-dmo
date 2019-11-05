@@ -1,17 +1,10 @@
-#!/bin/bash
-#SBATCH --job-name=100e
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp2_naive6_100epoch_c1_output.txt
-#SBATCH --gres=gpu:4
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
---gpu_ids 0,1,2,3 \
+--gpu_ids 0 \
 --netG0 dc_unet_nested \
 --netG dc_unet_nested \
 --netD naive6_nl \
 --pool_size 0 \
---batch_size 16 \
+--batch_size 4 \
 --preprocess resize_and_crop \
 --dataset_mode aligned \
 --load_size 256 \
