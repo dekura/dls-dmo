@@ -39,6 +39,8 @@ class Stage2WRModel(BaseModel):
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
             parser.add_argument('--lambda_R', type=float, default=10.0, help='weight for opc red layer l1loss')
+            parser.add_argument('--lambda_G', type=float, default=100.0, help='weight for opc green layer l1loss')
+            parser.add_argument('--lambda_B', type=float, default=100.0, help='weight for opc blue layer l1loss')
             # parser.add_argument('--lambda_W_layer', type=int, default=0, help='weight layer 0: red, 1: green, 2: blue ')
 
         return parser
@@ -151,9 +153,9 @@ class Stage2WRModel(BaseModel):
         blue_layer = 2
         lambda_L1 = self.opt.lambda_L1
         self.loss_G_L1 = self.criterionL1(self.fake_B[:, red_layer] * lambda_L1, self.real_B[:, red_layer]*lambda_L1) * self.opt.lambda_L1
-        self.loss_G_L1 += self.criterionL1(self.opc_A[:, green_layer], self.real_A[:, green_layer]) * self.opt.lambda_L1
+        self.loss_G_L1 += self.criterionL1(self.opc_A[:, green_layer], self.real_A[:, green_layer]) * self.opt.lambda_G
         self.loss_G_L1 += self.criterionL1(self.opc_A[:, red_layer], self.real_A[:, red_layer]) * self.opt.lambda_R
-        self.loss_G_L1 += self.criterionL1(self.opc_A[:, blue_layer], self.real_A[:, blue_layer]) * self.opt.lambda_L1
+        self.loss_G_L1 += self.criterionL1(self.opc_A[:, blue_layer], self.real_A[:, blue_layer]) * self.opt.lambda_B
         # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 1]*100, self.real_B[:, 1]*100) * self.opt.lambda_L1
         # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 0]*10, self.real_B[:, 0]*10) * self.opt.lambda_L1
         # combine loss and calculate gradients
