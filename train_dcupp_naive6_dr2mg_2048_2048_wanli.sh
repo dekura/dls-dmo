@@ -1,11 +1,11 @@
 ###
 # @Author: Guojin Chen
  # @Date: 2019-11-15 00:01:31
- # @LastEditTime: 2019-11-16 17:56:35
+ # @LastEditTime: 2019-11-16 18:27:04
  # @Contact: cgjhaha@qq.com
  # @Description:
  ###
-/research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
+/research/dept7/wlchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
 --netG dc_unet_nested \
@@ -29,4 +29,5 @@
 --model pix2pix \
 --direction AtoB \
 --display_id 0 \
---lambda_L1 300.0
+--lambda_L1 300.0 \
+--lambda_uppscale 8

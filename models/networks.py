@@ -124,7 +124,7 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     return net
 
 
-def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[]):
+def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], lambda_uppscale=2):
     """Create a generator
 
     Parameters:
@@ -169,7 +169,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         # not good testing
         net = UnetNestedGenerator(input_nc)
     elif netG == 'dc_unet_nested':
-        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_o=1)
+        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=1)
     elif netG == 'vdsr_dcupp':
         net = VDSR_UNet(input_nc)
     else:
@@ -613,9 +613,9 @@ def UnetNestedGenerator(input_nc):
     #
     # def forward(self, input):
     #     return
-def DCGANUnetNestedGenerator(input_nc, output_nc, lambda_o):
+def DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o):
     """create a unet_nested model"""
-    return DCGANNestedUNet(input_nc = input_nc, output_nc=output_nc, lambda_o=lambda_o)
+    return DCGANNestedUNet(input_nc = input_nc, output_nc=output_nc, lambda_o=lambda_o, upp_scale=lambda_uppscale)
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------
