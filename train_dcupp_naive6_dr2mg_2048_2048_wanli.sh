@@ -1,12 +1,13 @@
 ###
 # @Author: Guojin Chen
  # @Date: 2019-11-15 00:01:31
- # @LastEditTime: 2019-11-16 19:32:25
+ # @LastEditTime: 2019-11-16 19:31:35
  # @Contact: cgjhaha@qq.com
  # @Description:
  ###
 /research/dept7/wlchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0,1,2,3,4,5,6,7 \
+--checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
 --netG dc_unet_nested \
 --netD naive6_nl \
 --pool_size 0 \
