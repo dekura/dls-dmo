@@ -1,17 +1,16 @@
 ###
 # @Author: Guojin Chen
  # @Date: 2019-11-15 00:01:31
- # @LastEditTime: 2019-11-16 17:56:35
+ # @LastEditTime: 2019-11-16 19:32:25
  # @Contact: cgjhaha@qq.com
  # @Description:
  ###
-/research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
---gpu_ids 0 \
---checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
+/research/dept7/wlchen/miniconda3/envs/guojin/bin/python train.py \
+--gpu_ids 0,1,2,3,4,5,6,7 \
 --netG dc_unet_nested \
 --netD naive6_nl \
 --pool_size 0 \
---batch_size 1 \
+--batch_size 8 \
 --preprocess resize_and_crop \
 --dataset_mode aligned \
 --load_size 2048 \
@@ -29,4 +28,5 @@
 --model pix2pix \
 --direction AtoB \
 --display_id 0 \
---lambda_L1 300.0
+--lambda_L1 300.0 \
+--lambda_uppscale 8
