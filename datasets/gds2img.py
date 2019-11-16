@@ -6,7 +6,7 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw
 from progress.bar import Bar
-clipsize = 2000
+clipsize = 2048
 
 def gds2img(Infolder, Infile, ImgOut):
     GdsIn = os.path.join(Infolder, Infile)

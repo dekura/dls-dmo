@@ -1,10 +1,3 @@
-#!/bin/bash
-#SBATCH --job-name=mg2cw
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/dcupp_naive6_100epoch_mg2cw_2048.txt
-#SBATCH --gres=gpu:1
-
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
 --netG dc_unet_nested \
@@ -18,14 +11,13 @@
 --niter 50 \
 --niter_decay 50 \
 --print_freq 500 \
---save_epoch_freq 25 \
+--save_epoch_freq 50 \
 --input_nc 3 \
 --output_nc 3 \
 --init_type kaiming \
 --norm batch \
---dataroot /research/dept7/glchen/datasets/maskg_contourw_rect_paired_rgb_2048/combine_AB \
---name dcupp_naive6_100epoch_mg2cw_2048 \
+--dataroot /research/dept7/glchen/datasets/design_maskg_only_paired_rgb/combine_AB \
+--name dcupp_naive6_100epoch_c3_dr2mg_only \
 --model pix2pix \
 --direction AtoB \
---display_id 0 \
---lambda_L1 300.0
+--display_id 0

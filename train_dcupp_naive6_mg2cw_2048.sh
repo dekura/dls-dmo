@@ -1,6 +1,12 @@
+### 
+# @Author: Guojin Chen
+ # @Date: 2019-11-15 00:22:38
+ # @LastEditTime: 2019-11-15 00:25:07
+ # @Contact: cgjhaha@qq.com
+ # @Description:
+ ###
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
---netG0 dc_unet_nested \
 --netG dc_unet_nested \
 --netD naive6_nl \
 --pool_size 0 \
@@ -9,21 +15,17 @@
 --dataset_mode aligned \
 --load_size 256 \
 --crop_size 256 \
---niter 25 \
---niter_decay 25 \
+--niter 50 \
+--niter_decay 50 \
 --print_freq 500 \
 --save_epoch_freq 25 \
 --input_nc 3 \
 --output_nc 3 \
 --init_type kaiming \
 --norm batch \
---dataroot /research/dept7/glchen/datasets/design_contour_paired_rgb/combine_AB \
---netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_50epoch_c3/50_net_G.pth \
---name dcupp2wr_naive6_50epoch_c3 \
---model stage2wr \
+--dataroot /research/dept7/glchen/datasets/maskg_contourw_rect_paired_rgb_2048/combine_AB \
+--name dcupp_naive6_100epoch_mg2cw_2048 \
+--model pix2pix \
 --direction AtoB \
 --display_id 0 \
---upp_scale 2 \
---lambda_tanh_scale 1 \
---lambda_L1 100.0 \
---lambda_R 15
+--lambda_L1 300.0

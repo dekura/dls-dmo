@@ -5,7 +5,7 @@ import sys
 import os
 from PIL import Image, ImageDraw
 from progress.bar import Bar
-clipsize = 2000
+clipsize = 2048
 
 DESIGN_LAYER = 0
 OPC_LAYER = 1

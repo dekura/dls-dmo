@@ -1,6 +1,48 @@
+<!--
+ * @Author: Guojin Chen
+ * @Date: 2019-11-05 12:58:51
+ * @LastEditTime: 2019-11-16 11:20:42
+ * @Contact: cgjhaha@qq.com
+ * @Description: readme of training
+ -->
 # Tips before you train
 
-# First: Train GAN
+
+we need to firstly train an opc-gan, an the shell is `train_dcupp_naive6_dr2mg_2048_2048.sh`.
+`dr2mg` this word means design-red-to-mask-green. `_2048_2048` the first 2048 means the images
+in the datasets are 2048*2048size ,the second 2048 means we need to crop it into 2048 size.
+
+## shell
+
+```shell
+/research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
+--gpu_ids 0 \                               you can change it to multigpu 0,1,2,3,4,5,6,7
+--netG dc_unet_nested \
+--netD naive6_nl \
+--pool_size 0 \
+--batch_size 1 \                            change this carefully
+--preprocess resize_and_crop \
+--dataset_mode aligned \
+--load_size 2048 \
+--crop_size 2048 \
+--niter 50 \                                total epoch = niter+niter_decay = 50+50=100
+--niter_decay 50 \
+--print_freq 500 \
+--save_epoch_freq 10 \
+--input_nc 3 \
+--output_nc 3 \
+--init_type kaiming \
+--norm batch \
+--dataroot /research/dept7/glchen/datasets/design_maskg_rect_paired_rgb_2048/combine_AB \
+--name dcupp_naive6_100epoch_dr2mg_2048_2048 \
+--model pix2pix \
+--direction AtoB \
+--display_id 0 \
+--lambda_L1 300.0
+```
+
+# This is the original design.
+# First: Train LITHOGAN
 
 ## shell
 
@@ -11,7 +53,7 @@ some important varibales:
 ```shell
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
 --gpu_ids 0 \
---netG dc_unet_nested \        can not change 
+--netG dc_unet_nested \        can not change
 --netD naive6_nl \             can not change
 --pool_size 0 \
 --batch_size 4 \
@@ -62,7 +104,7 @@ some important varibales:
 --dataset_mode aligned \
 --load_size 256 \
 --crop_size 256 \
---niter 25 \													
+--niter 25 \
 --niter_decay 25 \
 --print_freq 500 \
 --save_epoch_freq 25 \
