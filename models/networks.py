@@ -177,7 +177,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     return init_net(net, init_type, init_gain, gpu_ids)
 
 
-def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], lambda_tanh_scale=1.0):
+def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], lambda_tanh_scale=1.0, lambda_uppscale=2):
     """Create a generator
 
     Parameters:
@@ -222,7 +222,7 @@ def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, 
         # not good testing
         net = UnetNestedGenerator(input_nc)
     elif netG0 == 'dc_unet_nested':
-        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_o=lambda_tanh_scale)
+        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=lambda_tanh_scale)
     elif netG0 == 'shuffle_dcupp':
         net = ShuffleNestedUnet(input_nc)
     elif netG0 == 'shuffle_unet':
