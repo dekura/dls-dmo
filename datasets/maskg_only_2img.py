@@ -1,3 +1,10 @@
+'''
+@Author: Guojin Chen
+@Date: 2019-11-13 00:52:14
+@LastEditTime: 2019-11-14 21:31:36
+@Contact: cgjhaha@qq.com
+@Description: 
+'''
 #gds2img.py by Haoyu
 ###########################
 import gdspy
@@ -27,18 +34,24 @@ def gds2img(Infolder, Infile, ImgOut):
     h_offset = int(bbox[0,1] - (clipsize-height)/2)
 
 
-    sellayer = [SRAF_LAYER, CONTOUR_LAYER] #Layer Number
+    # sellayer = [DESIGN_LAYER, OPC_LAYER, SRAF_LAYER] #Layer Number
+    sellayer = [OPC_LAYER]
     dtype = 0  #Layout Data Type
     polygon  = []
     im = Image.new("RGB", (clipsize, clipsize))
-    draw = ImageDraw.Draw(im)
+    im_r = im.getchannel('R')
+    im_g = im.getchannel('G')
+    im_b = im.getchannel('B')
+    draw_r = ImageDraw.Draw(im_r)
+    draw_g = ImageDraw.Draw(im_g)
+    draw_b = ImageDraw.Draw(im_b)
     token = 1
     for i in range(len(sellayer)):
         try:
             polyset = cell.get_polygons(by_spec=True)[(sellayer[i],dtype)]
         except:
             token=0
-            print("Layer not found, skipping...")
+            # print("Layer not found, skipping...")
             break
         for poly in range(0, len(polyset)):
             for points in range(0, len(polyset[poly])):
@@ -47,16 +60,15 @@ def gds2img(Infolder, Infile, ImgOut):
         for j in range(0, len(polyset)):
             tmp = tuple(map(tuple, polyset[j]))
             if sellayer[i] == DESIGN_LAYER:
-                draw.polygon(tmp, fill=(255, 0, 0))
+                draw_r.polygon(tmp, fill=255)
             if sellayer[i] == OPC_LAYER:
-                draw.polygon(tmp, fill=(255, 0, 0))
+                draw_g.polygon(tmp, fill=255)
             if sellayer[i] == SRAF_LAYER:
-                draw.polygon(tmp, fill=(0, 0, 255))
-            if sellayer[i] == CONTOUR_LAYER:
-                draw.polygon(tmp, fill=(255, 0, 0))
+                draw_b.polygon(tmp, fill=255)
     if token == 1:
         filename = Infile+".png"
         outpath  = os.path.join(ImgOut,filename)
+        im = Image.merge('RGB', [im_r, im_g, im_b])
         im.save(outpath)
 
 
@@ -66,9 +78,13 @@ def gds2img(Infolder, Infile, ImgOut):
 
 # Infolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample')
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
-Infolder = '/Users/dekura/Desktop/opc/datasets/lccout/gds'
-# Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_contour_output')
-Outfolder = '/Users/dekura/Desktop/opc/datasets/lccout/contour_sraf_rgb'
+Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
+# Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_output/maskg_only')
+Outfolder = '/Users/dekura/Desktop/opc/datasets/myresults/maskg_only'
+
+
+if not os.path.isdir(Outfolder):
+    os.mkdir(Outfolder)
 
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar=Bar("Converting GDSII to Image", max=len(filenames))

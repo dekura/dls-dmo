@@ -1,13 +1,21 @@
+'''
+@Author: Guojin Chen
+@Date: 2019-11-11 22:14:41
+@LastEditTime: 2019-11-14 23:03:41
+@Contact: cgjhaha@qq.com
+@Description: 
+'''
 import os
 import numpy as np
 import cv2
 import argparse
+from tqdm import tqdm
 
-parser = argparse.ArgumentParser('create image pairs')
+parser = argparse.ArgumentParser('create image pairs', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--gray_B', dest='gray_B', help='input directory for image gray B', type=str, default='/Users/dekura/Desktop/opc/datasets/design_contour_paired/B')
-parser.add_argument('--fold_A', dest='fold_A', help='input directory for image A', type=str, default='/Users/dekura/Desktop/opc/datasets/design_maskg_rect_paired_rgd/A')
-parser.add_argument('--fold_B', dest='fold_B', help='input directory for image B', type=str, default='/Users/dekura/Desktop/opc/datasets/design_maskg_rect_paired_rgd/B')
-parser.add_argument('--fold_AB', dest='fold_AB', help='output directory', type=str, default='/Users/dekura/Desktop/opc/datasets/design_maskg_rect_paired_rgd/combine_AB')
+parser.add_argument('--fold_A', dest='fold_A', help='input directory for image A', type=str, default='/Users/dekura/Desktop/opc/datasets/design_maskg_rect_paired_rgb_2048/A')
+parser.add_argument('--fold_B', dest='fold_B', help='input directory for image B', type=str, default='/Users/dekura/Desktop/opc/datasets/design_maskg_rect_paired_rgb_2048/B')
+parser.add_argument('--fold_AB', dest='fold_AB', help='output directory', type=str, default='/Users/dekura/Desktop/opc/datasets/design_maskg_rect_paired_rgb_2048/combine_AB')
 parser.add_argument('--num_imgs', dest='num_imgs', help='number of images', type=int, default=1000000)
 parser.add_argument('--use_AB', dest='use_AB', help='if true: (0001_A, 0001_B) to (0001_AB)', action='store_true')
 args = parser.parse_args()
@@ -18,7 +26,8 @@ args.use_AB = False
 for arg in vars(args):
     print('[%s] = ' % arg, getattr(args, arg))
 
-
+if not os.path.exists(args.fold_AB):
+    os.mkdir(args.fold_AB)
 
 
 splits = os.listdir(args.gray_B)
@@ -41,19 +50,20 @@ for sp in splits:
     if not os.path.isdir(img_fold_AB):
         os.makedirs(img_fold_AB)
     print('split = %s, number of images = %d' % (sp, num_imgs))
-    for n in range(num_imgs):
-        name_B = img_list[n]
-        path_B = os.path.join(img_fold_B, name_B)
-        if args.use_AB:
-            name_B = name_A.replace('_A.', '_B.')
-        else:
-            # name_A = name_B.replace('mb_mb_lccout.oas', 'mbsraf')
-            name_A = name_B
+    for n in tqdm(range(num_imgs)):
+        name_A = img_list[n]
+        name_A = name_A.replace('_mb_mb_lccout.oas.gds.png', '_mbsraf_mb_mb_lccout.oas.gds.png')
         path_A = os.path.join(img_fold_A, name_A)
+        # name_A = name_B
+        # name_B = name_A.replace('_mb_mb_lccout.oas.gds.png','_mbsraf_mb_mb_lccout.oas.gds.png')
+        name_B = name_A
+        path_B = os.path.join(img_fold_B, name_B)
+        # if args.use_AB:
+        #     name_B = name_A.replace('_A.', '_B.')
+        # else:
+        #     # name_A = name_B.replace('mb_mb_lccout.oas', 'mbsraf')
         if os.path.isfile(path_A) and os.path.isfile(path_B):
-            name_AB = name_B
-            if args.use_AB:
-                name_AB = name_AB.replace('_A.', '.')  # remove _A
+            name_AB = img_list[n]
             path_AB = os.path.join(img_fold_AB, name_AB)
             im_A = cv2.imread(path_A, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
             im_B = cv2.imread(path_B, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR

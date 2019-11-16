@@ -1,3 +1,10 @@
+'''
+@Author: Guojin Chen
+@Date: 2019-11-10 18:37:33
+@LastEditTime: 2019-11-14 21:48:39
+@Contact: cgjhaha@qq.com
+@Description: generate white contour in 2048*2048 size
+'''
 #gds2img.py by Haoyu
 ###########################
 import gdspy
@@ -27,7 +34,7 @@ def gds2img(Infolder, Infile, ImgOut):
     h_offset = int(bbox[0,1] - (clipsize-height)/2)
 
 
-    sellayer = [SRAF_LAYER, CONTOUR_LAYER] #Layer Number
+    sellayer = [CONTOUR_LAYER] #Layer Number
     dtype = 0  #Layout Data Type
     polygon  = []
     im = Image.new("RGB", (clipsize, clipsize))
@@ -53,7 +60,7 @@ def gds2img(Infolder, Infile, ImgOut):
             if sellayer[i] == SRAF_LAYER:
                 draw.polygon(tmp, fill=(0, 0, 255))
             if sellayer[i] == CONTOUR_LAYER:
-                draw.polygon(tmp, fill=(255, 0, 0))
+                draw.polygon(tmp, fill=(255, 255, 255))
     if token == 1:
         filename = Infile+".png"
         outpath  = os.path.join(ImgOut,filename)
@@ -66,9 +73,13 @@ def gds2img(Infolder, Infile, ImgOut):
 
 # Infolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample')
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
-Infolder = '/Users/dekura/Desktop/opc/datasets/lccout/gds'
+# Infolder = '/Users/dekura/Desktop/opc/datasets/lccout/gds'
+Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
 # Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_contour_output')
-Outfolder = '/Users/dekura/Desktop/opc/datasets/lccout/contour_sraf_rgb'
+Outfolder = '/Users/dekura/Desktop/opc/datasets/myresults/contourw_2048'
+
+if not os.path.isdir(Outfolder):
+    os.mkdir(Outfolder)
 
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar=Bar("Converting GDSII to Image", max=len(filenames))

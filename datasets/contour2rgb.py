@@ -5,7 +5,7 @@ import sys
 import os
 from PIL import Image, ImageDraw
 from progress.bar import Bar
-clipsize = 2000
+clipsize = 2048
 
 DESIGN_LAYER = 0
 OPC_LAYER = 1
@@ -68,7 +68,10 @@ def gds2img(Infolder, Infile, ImgOut):
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
 Infolder = '/Users/dekura/Desktop/opc/datasets/lccout/gds'
 # Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_contour_output')
-Outfolder = '/Users/dekura/Desktop/opc/datasets/lccout/contour_rgb'
+Outfolder = '/Users/dekura/Desktop/opc/datasets/lccout/contourw_rgb'
+
+if not os.path.isdir(Outfolder):
+    os.mkdir(Outfolder)
 
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar=Bar("Converting GDSII to Image", max=len(filenames))

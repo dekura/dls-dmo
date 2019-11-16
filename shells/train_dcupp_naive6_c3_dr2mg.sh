@@ -16,9 +16,8 @@
 --output_nc 3 \
 --init_type kaiming \
 --norm batch \
---dataroot /research/dept7/glchen/datasets/design_contour_paired_rgb/combine_AB \
---name dcupp_naive6_50epoch_c3 \
+--dataroot /research/dept7/glchen/datasets/design_maskg_paired_rgb/combine_AB \
+--name dcupp_naive6_50epoch_c3_dr2mg \
 --model pix2pix \
 --direction AtoB \
---display_id 0 \
-#--upp_scale 2
+--display_id 0

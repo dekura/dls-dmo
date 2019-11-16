@@ -1,4 +1,10 @@
-#gds2img.py by Haoyu
+'''
+@Author: Guojin Chen
+@Date: 2019-11-14 19:43:01
+@LastEditTime: 2019-11-14 21:39:28
+@Contact: cgjhaha@qq.com
+@Description: input one gds, output one 2048*2048 image
+'''
 ###########################
 import gdspy
 import sys
@@ -27,7 +33,8 @@ def gds2img(Infolder, Infile, ImgOut):
     h_offset = int(bbox[0,1] - (clipsize-height)/2)
 
 
-    sellayer = [SRAF_LAYER, CONTOUR_LAYER] #Layer Number
+    # sellayer = [DESIGN_LAYER, SRAF_LAYER] #Layer Number
+    sellayer = [DESIGN_LAYER, SRAF_LAYER]
     dtype = 0  #Layout Data Type
     polygon  = []
     im = Image.new("RGB", (clipsize, clipsize))
@@ -38,7 +45,7 @@ def gds2img(Infolder, Infile, ImgOut):
             polyset = cell.get_polygons(by_spec=True)[(sellayer[i],dtype)]
         except:
             token=0
-            print("Layer not found, skipping...")
+            # print("Layer not found, skipping...")
             break
         for poly in range(0, len(polyset)):
             for points in range(0, len(polyset[poly])):
@@ -47,13 +54,12 @@ def gds2img(Infolder, Infile, ImgOut):
         for j in range(0, len(polyset)):
             tmp = tuple(map(tuple, polyset[j]))
             if sellayer[i] == DESIGN_LAYER:
+                # print(tmp)
                 draw.polygon(tmp, fill=(255, 0, 0))
             if sellayer[i] == OPC_LAYER:
-                draw.polygon(tmp, fill=(255, 0, 0))
+                draw.polygon(tmp, fill=(0, 255, 0))
             if sellayer[i] == SRAF_LAYER:
                 draw.polygon(tmp, fill=(0, 0, 255))
-            if sellayer[i] == CONTOUR_LAYER:
-                draw.polygon(tmp, fill=(255, 0, 0))
     if token == 1:
         filename = Infile+".png"
         outpath  = os.path.join(ImgOut,filename)
@@ -66,9 +72,12 @@ def gds2img(Infolder, Infile, ImgOut):
 
 # Infolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample')
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
-Infolder = '/Users/dekura/Desktop/opc/datasets/lccout/gds'
-# Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_contour_output')
-Outfolder = '/Users/dekura/Desktop/opc/datasets/lccout/contour_sraf_rgb'
+Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
+# Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_output/design_sraf')
+Outfolder = '/Users/dekura/Desktop/opc/datasets/myresults/design_sraf_2048/'
+
+if not os.path.isdir(Outfolder):
+    os.mkdir(Outfolder)
 
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar=Bar("Converting GDSII to Image", max=len(filenames))
