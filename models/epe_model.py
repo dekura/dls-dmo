@@ -41,10 +41,10 @@ class EPEModel(BaseModel):
         parser.add_argument('--lambda_tanh_scale', type=float, default=1.0, help='scale factor for tanh scale')
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
-            parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
-            parser.add_argument('--lambda_L2', type=float, default=100.0, help='weight for L2 loss')
-            parser.add_argument('--lambda_R', type=float, default=10.0, help='weight for opc red layer l1loss')
-            parser.add_argument('--lambda_G', type=float, default=100.0, help='weight for opc green layer l1loss')
+            parser.add_argument('--lambda_L1', type=float, default=200.0, help='weight for L1 loss')
+            parser.add_argument('--lambda_L2', type=float, default=20.0, help='weight for L2 loss')
+            parser.add_argument('--lambda_R', type=float, default=100.0, help='weight for opc red layer l1loss')
+            parser.add_argument('--lambda_G', type=float, default=5.0, help='weight for opc green layer l1loss')
             parser.add_argument('--lambda_B', type=float, default=100.0, help='weight for opc blue layer l1loss')
             # parser.add_argument('--lambda_W_layer', type=int, default=0, help='weight layer 0: red, 1: green, 2: blue ')
 
@@ -109,7 +109,7 @@ class EPEModel(BaseModel):
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = input['A' if AtoB else 'B'].to(self.device)
         self.real_B = input['B' if AtoB else 'A'].to(self.device)
-        self.real_opc = input['C']
+        self.real_opc = input['C'].to(self.device)
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
@@ -163,6 +163,7 @@ class EPEModel(BaseModel):
         blue_layer = 2
         lambda_L1 = self.opt.lambda_L1
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        # green layer l1loss need to be small
         self.loss_G_L1 += self.criterionL1(self.opc_A[:, green_layer], self.real_opc[:, green_layer]) * self.opt.lambda_G
         self.loss_G_L1 += self.criterionL1(self.opc_A[:, red_layer], self.real_opc[:, red_layer]) * self.opt.lambda_R
         self.loss_G_L1 += self.criterionL1(self.opc_A[:, blue_layer], self.real_opc[:, blue_layer]) * self.opt.lambda_B

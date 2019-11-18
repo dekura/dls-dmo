@@ -1,3 +1,10 @@
+'''
+@Author: Guojin Chen
+@Date: 2019-11-17 22:51:44
+@LastEditTime: 2019-11-18 17:33:02
+@Contact: cgjhaha@qq.com
+@Description: test l2loss of datasets
+'''
 """General-purpose test script for image-to-image translation.
 
 Once you have trained your model with train.py, you can use this script to test the model.
@@ -28,29 +35,20 @@ See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-a
 """
 import os
 import time
+import torch
 import numpy as np
 from options.test_options import TestOptions
 from data import create_dataset
-from models import create_model
-from util.visualizer import save_images
-from util import html
-from metrics import SegmentationMetric
 from tqdm import tqdm
-import imageio
 
 
 
-GREEN_LAYER = 1
-
-def save_result2txt(path,pixAcc,mIoU, model_size_str, running_time):
+def save_result2txt(path, l2loss, running_time):
     f = open(path,'a+')
     f.write('testing time : {} \n'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     f.write('total running time: {}\n'.format(running_time))
-    f.write('Model Size: \n {} \n'.format(model_size_str))
-    f.write('pixAcc: {}, mIoU: {} \n \n'.format(pixAcc,mIoU))
+    f.write('l2loss: {} \n'.format(l2loss))
     f.close()
-
-
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
@@ -61,70 +59,42 @@ if __name__ == '__main__':
     opt.no_flip = True    # no flip; comment this line if results on flipped images are needed.
     opt.display_id = -1   # no visdom display; the test code saves the results to a HTML file.
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
-    model = create_model(opt)      # create a model given opt.model and other options
-    model.setup(opt)               # regular setup: load and print networks; create schedulers
-    model_size_str = model.get_model_size_str()
     # create a website
-    web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))  # define the website directory
-    webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
-
     # create a txt to save the testing results
-    txt_path = web_dir + '/{}_epoch_{}.txt'.format(opt.name,opt.epoch)
     # test with eval mode. This only affects layers like batchnorm and dropout.
     # For [pix2pix]: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
-    metric = SegmentationMetric(2)
+    web_dir = os.path.join(opt.results_dir, opt.name)  # define the website directory
+    if not os.path.exists(web_dir):
+        os.mkdir(web_dir)
+    txt_path = web_dir + '/{}_epoch_{}.txt'.format(opt.name,opt.epoch)
     tbar = tqdm(dataset)
-    if opt.eval:
-        model.eval()
-    finalAcc , finalmIoU = 0, 0
+    l2loss_mean = 0
     t = time.time()
     for i, data in enumerate(tbar):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
-        # if i>=1:
-        #     break
-        model.set_input(data)  # unpack data from data loader
-        model.test()           # run inference
-        visuals = model.get_current_visuals()  # get image results
-        img_path = model.get_image_paths()     # get image paths
-
         """
         because the data in picture was divided into binary with [-1, 1]
         we need to set the label to [0,1]
-        and we want to focus on the green layer: mask layer
         """
-        gnd = data['B'].cpu().numpy()
-        gnd[gnd > 0] = 0
-        gnd += 1
-        gnd = gnd[:, GREEN_LAYER]
+        if opt.input_nc == 1:
+            design = data['A']
+            wafer = data['B']
+        else:
+            red_layer = 0
+            design = data['A'][:, red_layer]
+            wafer = data['B'][:, red_layer]
 
-        pred = visuals['fake_B'].cpu().numpy()
-        pred[pred > 0] = 0
-        pred += 1
-        pred = pred[:, GREEN_LAYER]
-        # gnd = gnd/2
-        # red layer
-        # gnd = gnd[0][0]
-        # pred += 1
-        # pred = pred/2
-        # red layer
-        # pred = pred[0][0]
-        # imageio.imwrite('/research/dept7/glchen/tmp/debug/pred.png', pred[0].reshape((256, 256, -1)))
-        # gnd = data['B'].cpu().numpy()
-        # pred = visuals['fake_B'].cpu().numpy()
-        # print('gnd max {}, gnd min {}'.format(np.max(gnd),np.min(gnd)))
-        # print('pred max {}, pred min {}'.format(np.max(pred),np.min(pred)))
-        metric.update(gnd, pred)
-        acc_cls, mean_iu = metric.get()
-        tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (acc_cls, mean_iu))
-        if i == opt.num_test - 1:
-            finalAcc = acc_cls
-            finalmIoU = mean_iu
-        # if i % 5 == 0:  # save images to an HTML file
-        #     print('processing (%04d)-th image... %s' % (i, img_path))
-        save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+        design = design+1
+        design =  design/2
+        wafer = wafer+1
+        wafer = wafer/2
+        before_sum = l2loss_mean * i
+        now_sum = before_sum + torch.nn.MSELoss(reduction='sum')(wafer, design)
+        l2loss_mean = now_sum/(i+1)
+
+        tbar.set_description('l2loss: %.4f' % (l2loss_mean))
     elapsed = time.time() - t
-    webpage.save()  # save the HTML
     print('total running time: {}'.format(elapsed))
-    save_result2txt(txt_path, finalAcc, finalmIoU, model_size_str, elapsed)
+    save_result2txt(txt_path, l2loss_mean, elapsed)

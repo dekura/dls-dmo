@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2019-11-16 20:39:22
-@LastEditTime: 2019-11-16 20:47:39
+@LastEditTime: 2019-11-17 00:48:53
 @Contact: cgjhaha@qq.com
 @Description: align design mask contowe together
 '''
@@ -65,7 +65,7 @@ class AlignedABCDataset(BaseDataset):
         B = B_transform(B)
         C = C_transform(C)
 
-        return {'A': A, 'B': B, 'C': C, 'A_paths': ABC_path, 'B_paths': ABC_path, 'C_paths'}
+        return {'A': A, 'B': B, 'C': C, 'A_paths': ABC_path, 'B_paths': ABC_path, 'C_paths': ABC_path}
 
     def __len__(self):
         """Return the total number of images in the dataset."""
