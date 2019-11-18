@@ -1,18 +1,18 @@
-#!/bin/bash
-#SBATCH --job-name=2568
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/wlchen/guojin/tmp/epe_50epoch_2048_256.txt
-#SBATCH --gres=gpu:8
-
+### 
+# @Author: Guojin Chen
+ # @Date: 2019-11-16 22:00:10
+ # @LastEditTime: 2019-11-18 14:50:48
+ # @Contact: cgjhaha@qq.com
+ # @Description:
+ ###
 /research/dept7/wlchen/miniconda3/envs/guojin/bin/python train.py \
---gpu_ids 0,1,2,3,4,5,6,7 \
+--gpu_ids 0 \
 --checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
 --netG0 dc_unet_nested \
 --netG dc_unet_nested \
 --netD naive6_nl \
 --pool_size 0 \
---batch_size 64 \
+--batch_size 8 \
 --preprocess resize_and_crop \
 --dataset_mode alignedabc \
 --load_size 256 \
@@ -32,9 +32,4 @@
 --model epe \
 --direction AtoB \
 --display_id 0 \
---upp_scale 2 \
---lambda_L1 300.0 \
---lambda_L2 100.0 \
---lambda_R 100.0 \
---lambda_G 50.0 \
---lambda_B 100.0
+--upp_scale 2

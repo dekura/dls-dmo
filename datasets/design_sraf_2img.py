@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2019-11-14 19:43:01
-@LastEditTime: 2019-11-14 21:39:28
+@LastEditTime: 2019-11-18 12:14:11
 @Contact: cgjhaha@qq.com
 @Description: input one gds, output one 2048*2048 image
 '''
@@ -9,6 +9,7 @@
 import gdspy
 import sys
 import os
+import argparse
 from PIL import Image, ImageDraw
 from progress.bar import Bar
 clipsize = 2048
@@ -70,12 +71,26 @@ def gds2img(Infolder, Infile, ImgOut):
 # Infolder = sys.argv[1]
 # Outfolder= sys.argv[2]
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--name', default='', type=str, help='experiment name')
+args = parser.parse_args()
+name = args.name
+
+if name == '':
+    print('please input a name')
+    raise TypeError
 # Infolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample')
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
-Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
+# Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
+Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_100epoch_dr2mg_2048_1024'
 # Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_output/design_sraf')
-Outfolder = '/Users/dekura/Desktop/opc/datasets/myresults/design_sraf_2048/'
+# Outfolder = '/Users/dekura/Desktop/opc/datasets/myresults/design_sraf_2048/'
+Outfolder = '/home/glchen/datasets/gan_gds2png'
+Outfolder = os.path.join(Outfolder, name)
+if not os.path.isdir(Outfolder):
+    os.mkdir(Outfolder)
 
+Outfolder = os.path.join(Outfolder, 'testA')
 if not os.path.isdir(Outfolder):
     os.mkdir(Outfolder)
 
