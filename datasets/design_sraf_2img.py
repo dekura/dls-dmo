@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2019-11-14 19:43:01
-@LastEditTime: 2019-11-18 12:14:11
+@LastEditTime: 2019-11-19 18:43:57
 @Contact: cgjhaha@qq.com
 @Description: input one gds, output one 2048*2048 image
 '''
@@ -73,6 +73,7 @@ def gds2img(Infolder, Infile, ImgOut):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', default='', type=str, help='experiment name')
+parser.add_argument('--in_folder', default='', type=str, help='gan_gds folder')
 args = parser.parse_args()
 name = args.name
 
@@ -82,7 +83,9 @@ if name == '':
 # Infolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample')
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
 # Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
-Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_100epoch_dr2mg_2048_1024'
+# Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_100epoch_dr2mg_2048_1024'
+# Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_weighted_100epoch_dr2mg_2048_1024'
+Infolder = args.in_folder
 # Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_output/design_sraf')
 # Outfolder = '/Users/dekura/Desktop/opc/datasets/myresults/design_sraf_2048/'
 Outfolder = '/home/glchen/datasets/gan_gds2png'

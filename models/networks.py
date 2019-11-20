@@ -170,6 +170,8 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = UnetNestedGenerator(input_nc)
     elif netG == 'dc_unet_nested':
         net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=1)
+    elif netG == 'ganopc_unet':
+        net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'vdsr_dcupp':
         net = VDSR_UNet(input_nc)
     else:

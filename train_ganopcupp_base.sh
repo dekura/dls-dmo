@@ -1,17 +1,17 @@
-#!/bin/bash
-#SBATCH --job-name=ganopc
-#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
-#SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/ganopc_upp_base_50epoch.txt
-#SBATCH --gres=gpu:2
-
+### 
+# @Author: Guojin Chen
+ # @Date: 2019-11-18 22:57:16
+ # @LastEditTime: 2019-11-18 23:42:44
+ # @Contact: cgjhaha@qq.com
+ # @Description:
+ ###
 /research/dept7/wlchen/miniconda3/envs/guojin/bin/python train.py \
---gpu_ids 0,1 \
+--gpu_ids 0 \
 --netG ganopc_unet \
 --netD n_layers \
 --n_layers_D 6 \
 --pool_size 0 \
---batch_size 16 \
+--batch_size 8 \
 --preprocess resize_and_crop \
 --dataset_mode aligned \
 --load_size 256 \

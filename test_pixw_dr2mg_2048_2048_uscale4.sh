@@ -1,7 +1,7 @@
 ### 
 # @Author: Guojin Chen
  # @Date: 2019-11-18 00:28:12
- # @LastEditTime: 2019-11-20 16:56:33
+ # @LastEditTime: 2019-11-20 17:00:42
  # @Contact: cgjhaha@qq.com
  # @Description: 
  ###
@@ -14,6 +14,8 @@
 --load_size 2048 \
 --crop_size 2048 \
 --dataroot /research/dept7/glchen/datasets/design_maskg_rect_paired_rgb_2048/combine_AB \
+--checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
+--results_dir /research/dept7/glchen/github/pixel2pixel/results \
 --name dcupp_naive6_weighted_100epoch_dr2mg_2048_2048_uppscale4 \
 --model pix2pixw \
 --input_nc 3 \

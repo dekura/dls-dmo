@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=epel1
+#SBATCH --job-name=gan2w
 #SBATCH --mail-user=glchen@cse.cuhk.edu.hk
 #SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/epel1_50epoch_2048_1024_gl.txt
+#SBATCH --output=/research/dept7/glchen/tmp/log/gan2ganw_50epoch_2048_1024_gl.txt
 #SBATCH --gres=gpu:8
 
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
@@ -20,21 +20,20 @@
 --niter 50 \
 --niter_decay 50 \
 --print_freq 500 \
---save_epoch_freq 5 \
+--save_epoch_freq 10 \
 --input_nc 3 \
 --output_nc 3 \
 --init_type kaiming \
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/design_mask_contour_ABC_2048/combine_AB \
---netG0_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_weighted_100epoch_dr2mg_2048_1024/latest_net_G.pth \
---netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_100epoch_mg2cw_2048_1024/latest_net_G.pth \
---name epel1_50epoch_2048_1024_gl \
---model epel1 \
+--netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_100epoch_mg2cw_2048_1024/50_net_G.pth \
+--name gan2ganw_50epoch_2048_1024_gl \
+--model gan2ganw \
 --direction AtoB \
 --display_id 0 \
 --lambda_uppscale 4 \
 --lambda_L1 300.0 \
---lambda_EPE_L1 320.0 \
---lambda_R 100.0 \
---lambda_G 100.0 \
---lambda_B 100.0
+--lambda_EPE_L1 100.0 \
+--lambda_R 800.0 \
+--lambda_G 400.0 \
+--lambda_B 800.0

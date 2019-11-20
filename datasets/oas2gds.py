@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2019-11-18 00:36:43
-@LastEditTime: 2019-11-18 01:29:09
+@LastEditTime: 2019-11-19 18:37:52
 @Contact: cgjhaha@qq.com
 @Description: oas2gds using calibre
 '''
@@ -14,6 +14,7 @@ calibre_path = '/home/hgeng/Calibre/aoj_cal_2018.2_33.24/bin/calibre'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', default='', type=str, help='experiment name')
+parser.add_argument('--oas_folder', default='', type=str, help='the oas folder path')
 args = parser.parse_args()
 name = args.name
 
@@ -83,9 +84,11 @@ OUT_contour      {COPY lay_contour  } DRC CHECK MAP OUT_contour   200    0
 
 if __name__ == '__main__':
 
-    oas_folder = '/home/glchen/epetest_1024/results/dcupp_naive6_100epoch_dr2mg_2048_1024'
+    # oas_folder = '/home/glchen/epetest_1024/results/dcupp_naive6_100epoch_dr2mg_2048_1024'
+    # oas_folder = '/home/glchen/epetest_weighted_1024/results/dcupp_naive6_weighted_100epoch_dr2mg_2048_1024_gt/oas'
+    # oas_folder = '/home/glchen/epetest_256/results/ganopc_upp_base_50epoch'
+    oas_folder = args.oas_folder
     gds_folder = '/home/glchen/datasets/gan_gds'
-
     gds_folder = os.path.join(gds_folder, name)
     if not os.path.exists(gds_folder):
         os.mkdir(gds_folder)

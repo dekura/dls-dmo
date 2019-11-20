@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2019-11-17 22:51:44
-@LastEditTime: 2019-11-18 17:33:02
+@LastEditTime: 2019-11-20 17:23:25
 @Contact: cgjhaha@qq.com
 @Description: test l2loss of datasets
 '''
@@ -78,6 +78,7 @@ if __name__ == '__main__':
         because the data in picture was divided into binary with [-1, 1]
         we need to set the label to [0,1]
         """
+        # print(data['A'].shape)
         if opt.input_nc == 1:
             design = data['A']
             wafer = data['B']
@@ -85,7 +86,6 @@ if __name__ == '__main__':
             red_layer = 0
             design = data['A'][:, red_layer]
             wafer = data['B'][:, red_layer]
-
         design = design+1
         design =  design/2
         wafer = wafer+1
