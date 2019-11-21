@@ -36,7 +36,6 @@ from util.visualizer import save_images
 from util import html
 from metrics import SegmentationMetric
 from tqdm import tqdm
-import imageio
 
 
 

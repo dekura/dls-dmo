@@ -15,8 +15,8 @@ class VGGBlock(nn.Module):
     def __init__(self, in_channels, middle_channels, out_channels, act_func=nn.LeakyReLU(0.2, inplace=True)):
         super(VGGBlock, self).__init__()
         self.act_func_down = act_func
-        self.act_func_up = nn.ReLU(True)
-        # self.act_func_up = act_func
+        # self.act_func_up = nn.ReLU(True)
+        self.act_func_up = act_func
         self.conv1 = nn.Conv2d(in_channels, middle_channels, 3, padding=1)
         self.bn1 = nn.BatchNorm2d(middle_channels)
         self.conv2 = nn.Conv2d(middle_channels, out_channels, 3, padding=1)

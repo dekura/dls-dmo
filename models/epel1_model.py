@@ -12,7 +12,7 @@ desing <- |gan-opc| <- mask <- |lithogan| <- wafer
 to get smaller epenum in mask
 """
 
-class EPEModel(BaseModel):
+class EPEL1Model(BaseModel):
     """ This class implements the EPE model, for learning a mapping from input images to output images given paired data.
     Learning the mapping from design and imagine a middle output, than make the middle output into the lithogan before.
 
@@ -43,7 +43,7 @@ class EPEModel(BaseModel):
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=200.0, help='weight for L1 loss')
-            parser.add_argument('--lambda_L2', type=float, default=30.0, help='weight for L2 loss')
+            parser.add_argument('--lambda_EPE_L1', type=float, default=30.0, help='weight for EPE L1 loss')
             parser.add_argument('--lambda_R', type=float, default=100.0, help='weight for opc red layer l1loss')
             parser.add_argument('--lambda_G', type=float, default=10.0, help='weight for opc green layer l1loss')
             parser.add_argument('--lambda_B', type=float, default=100.0, help='weight for opc blue layer l1loss')
@@ -59,7 +59,7 @@ class EPEModel(BaseModel):
         """
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
-        self.loss_names = ['G_GAN', 'G_L1', 'OPC_L1', 'EPE_L2', 'D_real', 'D_fake']
+        self.loss_names = ['G_GAN', 'G_L1', 'OPC_L1', 'EPE_L1', 'D_real', 'D_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         self.visual_names = ['real_A', 'opc_A', 'real_opc','fake_B', 'real_B']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
@@ -92,7 +92,7 @@ class EPEModel(BaseModel):
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
-            self.criterionL2 = torch.nn.MSELoss()
+            # self.criterionL2 = torch.nn.MSELoss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G0 = torch.optim.Adam(filter(lambda p: p.requires_grad, self.netG0.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
             # self.optimizer_G = torch.optim.Adam(filter(lambda p: p.requires_grad, self.netG.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -173,11 +173,15 @@ class EPEModel(BaseModel):
         # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 1]*100, self.real_B[:, 1]*100) * self.opt.lambda_L1
         # self.loss_G_L1 += self.criterionL1(self.fake_B[:, 0]*10, self.real_B[:, 0]*10) * self.opt.lambda_L1
         # combine loss and calculate gradients
-        self.loss_EPE_L2 = self.criterionL2(self.fake_B[:, green_layer], self.real_A[:, red_layer]) * self.opt.lambda_L2
-        self.loss_EPE_L2 += self.criterionL2(self.fake_B[:, red_layer], self.real_A[:, red_layer]) * self.opt.lambda_L2
-        self.loss_EPE_L2 += self.criterionL2(self.fake_B[:, blue_layer], self.real_A[:, red_layer]) * self.opt.lambda_L2
+        # self.loss_EPE_L2 = self.criterionL2(self.fake_B[:, green_layer], self.real_A[:, red_layer]) * self.opt.lambda_L2
+        # self.loss_EPE_L2 += self.criterionL2(self.fake_B[:, red_layer], self.real_A[:, red_layer]) * self.opt.lambda_L2
+        # self.loss_EPE_L2 += self.criterionL2(self.fake_B[:, blue_layer], self.real_A[:, red_layer]) * self.opt.lambda_L2
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1+ self.loss_OPC_L1 + self.loss_EPE_L2
+        self.loss_EPE_L1 = self.criterionL1(self.fake_B[:, green_layer], self.real_A[:, red_layer]) * self.opt.lambda_EPE_L1
+        self.loss_EPE_L1 += self.criterionL1(self.fake_B[:, red_layer], self.real_A[:, red_layer]) * self.opt.lambda_EPE_L1
+        self.loss_EPE_L1 += self.criterionL1(self.fake_B[:, blue_layer], self.real_A[:, red_layer]) * self.opt.lambda_EPE_L1
+
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1+ self.loss_OPC_L1 + self.loss_EPE_L1
         self.loss_G.backward()
 
     def optimize_parameters(self):

@@ -1,7 +1,14 @@
 '''
 @Author: Guojin Chen
 @Date: 2019-11-10 18:37:33
-@LastEditTime: 2019-11-18 12:14:34
+@LastEditTime: 2019-11-19 18:41:57
+@Contact: cgjhaha@qq.com
+@Description: 
+'''
+'''
+@Author: Guojin Chen
+@Date: 2019-11-10 18:37:33
+@LastEditTime: 2019-11-18 20:10:01
 @Contact: cgjhaha@qq.com
 @Description: generate white contour in 2048*2048 size
 '''
@@ -69,6 +76,7 @@ def gds2img(Infolder, Infile, ImgOut):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', default='', type=str, help='experiment name')
+parser.add_argument('--in_folder', default='', type=str, help='gan_gds folder')
 args = parser.parse_args()
 name = args.name
 
@@ -83,7 +91,9 @@ if name == '':
 # Infolder = '/Users/dekura/Desktop/opc/design-april'
 # Infolder = '/Users/dekura/Desktop/opc/datasets/lccout/gds'
 # Infolder = '/Users/dekura/Desktop/opc/datasets/myresults/gds/'
-Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_100epoch_dr2mg_2048_1024'
+# Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_100epoch_dr2mg_2048_1024'
+# Infolder = '/home/glchen/datasets/gan_gds/dcupp_naive6_weighted_100epoch_dr2mg_2048_1024'
+Infolder = args.in_folder
 # Outfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)),'test_sample_contour_output')
 Outfolder = '/home/glchen/datasets/gan_gds2png'
 Outfolder = os.path.join(Outfolder, name)
