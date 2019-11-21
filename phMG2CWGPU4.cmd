@@ -11,7 +11,7 @@
 --netG new_dcupp \
 --netD naive6_nl \
 --pool_size 0 \
---batch_size 8 \
+--batch_size 4 \
 --preprocess resize_and_crop \
 --dataset_mode aligned \
 --load_size 1024 \
@@ -30,4 +30,4 @@
 --direction AtoB \
 --display_id 0 \
 --lambda_L1 300.0 \
---lambda_uppscale 4
+--lambda_uppscale 2
