@@ -2,7 +2,7 @@
 #SBATCH --job-name=gan2sl1
 #SBATCH --mail-user=glchen@cse.cuhk.edu.hk
 #SBATCH --mail-type=ALL
-#SBATCH --output=/research/dept7/glchen/tmp/log/gan2gan_50epoch_2048_1024_gl.txt
+#SBATCH --output=/research/dept7/glchen/tmp/log/gan2gan_100epoch_2048_1024_gl_sl1_fixed.txt
 #SBATCH --gres=gpu:8
 
 /research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
@@ -27,11 +27,11 @@
 --norm batch \
 --dataroot /research/dept7/glchen/datasets/design_mask_contour_ABC_2048/combine_AB \
 --netG_pretrained_path /research/dept7/glchen/github/pixel2pixel/checkpoints/dcupp_naive6_100epoch_mg2cw_2048_1024/70_net_G.pth \
---name gan2gan_100epoch_2048_1024_gl_sl1 \
+--name gan2gan_100epoch_2048_1024_gl_sl1_fixed \
 --model gan2gan \
 --direction AtoB \
 --display_id 0 \
 --lambda_uppscale 4 \
---lambda_L1 100.0 \
+--lambda_L1 200.0 \
 --lambda_OPC_L1 500.0 \
---lambda_EPE_L1 25.0
+--lambda_EPE_L1 50.0

@@ -4,6 +4,7 @@ from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
 from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
+from .NEWDCUPP import NestedUNet as NewDCUPP
 from .NestedUnet import NestedUNet
 from .vdsr_dcupp import VDSR_UNet
 from .ShuffleNestedUnet import NestedUNet as ShuffleNestedUnet
@@ -170,6 +171,8 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = UnetNestedGenerator(input_nc)
     elif netG == 'dc_unet_nested':
         net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=1)
+    elif netG == 'new_dcupp':
+        net = NewDCUPP(input_nc, output_nc, upp_scale=lambda_uppscale)
     elif netG == 'ganopc_unet':
         net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'vdsr_dcupp':
@@ -225,6 +228,8 @@ def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, 
         net = UnetNestedGenerator(input_nc)
     elif netG0 == 'dc_unet_nested':
         net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=lambda_tanh_scale)
+    elif netG0 == 'new_dcupp':
+        net = NewDCUPP(input_nc, output_nc, upp_scale=lambda_uppscale)
     elif netG0 == 'shuffle_dcupp':
         net = ShuffleNestedUnet(input_nc)
     elif netG0 == 'shuffle_unet':

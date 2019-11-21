@@ -1,12 +1,13 @@
-###
-# @Author: Guojin Chen
- # @Date: 2019-11-15 00:01:31
- # @LastEditTime: 2019-11-21 17:25:31
- # @Contact: cgjhaha@qq.com
- # @Description:
- ###
-/research/dept7/glchen/miniconda3/envs/guojin/bin/python train.py \
---gpu_ids 0,1,2,3,4,5,6,7 \
+#!/bin/bash
+#SBATCH --job-name=phmg2cw
+#SBATCH --mail-user=glchen@cse.cuhk.edu.hk
+#SBATCH --mail-type=ALL
+#SBATCH --output=/research/dept7/glchen/phchen/tmp/newdcupp_naive6_100epoch_mg2cw_2048_1024.txt
+#SBATCH --gres=gpu:4
+
+/research/dept7/glchen/phchen/miniconda3/envs/pytorch/bin/python train.py \
+--gpu_ids 0,1,2,3 \
+--checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
 --netG new_dcupp \
 --netD naive6_nl \
 --pool_size 0 \
