@@ -1,13 +1,13 @@
 ### 
 # @Author: Guojin Chen
  # @Date: 2019-11-18 00:28:12
- # @LastEditTime: 2019-11-23 20:31:31
+ # @LastEditTime: 2019-11-23 21:48:02
  # @Contact: cgjhaha@qq.com
- # @Description: 
+ # @Description:
  ###
-/research/dept7/wlchen/miniconda3/envs/guojin/bin/python test_mask_green.py \
+/research/dept7/glchen/phchen/miniconda3/envs/pytorch/bin/python test_mask_green.py \
 --gpu_ids 0 \
---netG dc_unet_nested \
+--netG new_dcupp \
 --netD naive6_nl \
 --display_winsize 2048 \
 --preprocess resize_and_crop \
@@ -23,7 +23,6 @@
 --direction AtoB \
 --dataset_mode aligned \
 --eval \
---epoch 100 \
 --num_test 2170 \
 --norm batch \
 --lambda_uppscale 4

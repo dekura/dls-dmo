@@ -1,7 +1,7 @@
 ###
 # @Author: Guojin Chen
  # @Date: 2019-11-16 11:22:32
- # @LastEditTime: 2019-11-19 20:31:41
+ # @LastEditTime: 2019-11-27 16:39:42
  # @Contact: cgjhaha@qq.com
  # @Description: the shell to test 1024 size image
  ###
@@ -10,10 +10,10 @@
 --netG ganopc_unet \
 --netD n_layers \
 --n_layers_D 6 \
---display_winsize 256 \
+--display_winsize 1024 \
 --preprocess resize_and_crop \
---load_size 256 \
---crop_size 256 \
+--load_size 1024 \
+--crop_size 1024 \
 --dataroot /research/dept7/glchen/datasets/design_maskg_rect_paired_rgb_2048/combine_AB \
 --checkpoints_dir /research/dept7/glchen/github/pixel2pixel/checkpoints \
 --results_dir /research/dept7/glchen/github/pixel2pixel/results \
@@ -24,6 +24,6 @@
 --direction AtoB \
 --dataset_mode aligned \
 --eval \
---epoch 25 \
+--epoch 50 \
 --num_test 2170 \
 --norm batch
