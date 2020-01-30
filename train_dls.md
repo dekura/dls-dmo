@@ -16,12 +16,14 @@
 
 
 datasets paths `/research/dept7/glchen/datasets/dlsopc_datasets` all is shared
+
 checkpoints paths `/research/dept7/glchen/github/pixel2pixel/checkpoints` all is shared
 
 
 # model path:
 
 `/research/dept7/glchen/github/pixel2pixel/checkpoints/newdcupp_naive6_100epoch_mg2cw_2048_1024/latest_net_G.pth`
+
 `/research/dept7/glchen/github/pixel2pixel/checkpoints/newdcupp_naive6_100epoch_mg2cw_2048_1024/latest_net_D.pth`
 
 we need to firstly train an opc-gan, an the shell is `train_dcupp_naive6_dr2mg_2048_2048.sh`.
@@ -38,7 +40,7 @@ you can run `bash train_newdcupp_naive6_mg2cw_2048_1024.sh`
 mg2cw means: mask(green) to contour(white)
 
 ## shell
-some important varibales:
+some important varibales:  all varibales can be found meaning in `options/base_options.py`
 
 
 ```shell
@@ -97,5 +99,4 @@ you can run `bash test_mg2cw_2048_1024_newdcupp.sh`
 --eval \
 --num_test 2170 \
 --norm batch
-
 ```
