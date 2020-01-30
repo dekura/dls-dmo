@@ -19,6 +19,9 @@
 --crop_size 1024 \
 --niter 50 \
 --niter_decay 50 \
+--continue_train \
+--epoch 50 \
+--epoch_count 51 \
 --print_freq 500 \
 --save_epoch_freq 10 \
 --input_nc 3 \
