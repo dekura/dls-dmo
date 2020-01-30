@@ -1,0 +1,20 @@
+/research/dept7/glchen/miniconda3/envs/guojin/bin/python test.py \
+--gpu_ids 0 \
+--netG0 dc_unet_nested \
+--netG dc_unet_nested \
+--netD naive6_nl \
+--display_winsize 256 \
+--preprocess resize_and_crop \
+--load_size 256 \
+--crop_size 256 \
+--input_nc 3 \
+--output_nc 3 \
+--dataset_mode aligned \
+--dataroot /research/dept7/glchen/datasets/design_contour_paired_rgb/combine_AB \
+--name dcupp2wr_naive6_50epoch_c3_opcr100_t5 \
+--model stage2wr \
+--direction AtoB \
+--eval \
+--num_test 2170 \
+--norm batch \
+--lambda_tanh_scale 5

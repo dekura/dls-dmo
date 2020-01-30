@@ -1,0 +1,18 @@
+/research/dept7/glchen/miniconda3/envs/guojin/bin/python test_mask_green.py \
+--gpu_ids 0 \
+--netG dc_unet_nested \
+--netD naive6_nl \
+--display_winsize 512 \
+--preprocess resize_and_crop \
+--load_size 512 \
+--crop_size 512 \
+--dataroot /research/dept7/glchen/datasets/design_maskg_rect_paired_rgb_2048/combine_AB \
+--name dcupp_naive6_100epoch_dr2mg_2048_512 \
+--model pix2pix \
+--input_nc 3 \
+--output_nc 3 \
+--direction AtoB \
+--dataset_mode aligned \
+--eval \
+--num_test 2170 \
+--norm batch

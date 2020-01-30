@@ -27,6 +27,8 @@ See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-p
 See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
 """
 import os
+import time
+import numpy as np
 from options.test_options import TestOptions
 from data import create_dataset
 from models import create_model
@@ -34,6 +36,15 @@ from util.visualizer import save_images
 from util import html
 from metrics import SegmentationMetric
 from tqdm import tqdm
+
+
+
+def save_result2txt(path,pixAcc,mIoU, model_size_str):
+    f = open(path,'a')
+    f.write('testing time : {} \n'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    f.write('Model Size: \n {} \n'.format(model_size_str))
+    f.write('pixAcc: {}, mIoU: {} \n \n'.format(pixAcc,mIoU))
+    f.close()
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
@@ -46,18 +57,21 @@ if __name__ == '__main__':
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
+    model_size_str = model.get_model_size_str()
     # create a website
     web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))  # define the website directory
     webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
+
+    # create a txt to save the testing results
+    txt_path = web_dir + '/{}_epoch_{}.txt'.format(opt.name,opt.epoch)
     # test with eval mode. This only affects layers like batchnorm and dropout.
     # For [pix2pix]: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
     metric = SegmentationMetric(2)
     tbar = tqdm(dataset)
-
     if opt.eval:
         model.eval()
-
+    finalAcc , finalmIoU = 0, 0
     for i, data in enumerate(tbar):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
@@ -65,13 +79,25 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
-        gnd = data['B']
-        pred =  visuals['fake_B']
-        # print(gnd)
-        metric.update(gnd+1, gnd+1)
-        pixAcc, mIoU = metric.get()
-        tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (pixAcc, mIoU))
+
+        """
+        because the data in picture was divided into binary with [-1, 1]
+        we need to set the label to [0,1]
+        """
+        gnd = data['B'].cpu().numpy()
+        gnd[gnd > 0] = 0
+        pred = visuals['fake_B'].cpu().numpy()
+        pred[pred > 0] = 0
+        gnd += 1
+        pred += 1
+        metric.update(gnd, pred)
+        acc_cls, mean_iu = metric.get()
+        tbar.set_description('pixAcc: %.4f, mIoU: %.4f' % (acc_cls, mean_iu))
+        if i == opt.num_test - 1:
+            finalAcc = acc_cls
+            finalmIoU = mean_iu
         # if i % 5 == 0:  # save images to an HTML file
         #     print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     webpage.save()  # save the HTML
+    save_result2txt(txt_path, finalAcc, finalmIoU, model_size_str)

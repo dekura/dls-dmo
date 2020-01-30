@@ -3,6 +3,14 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
+from .DCGANNestedUnet import NestedUNet as DCGANNestedUNet
+from .NEWDCUPP import NestedUNet as NewDCUPP
+from .NestedUnet import NestedUNet
+from .vdsr_dcupp import VDSR_UNet
+from .ShuffleNestedUnet import NestedUNet as ShuffleNestedUnet
+from .ShuffleNestedUnet import UNet as ShuffleUnet
+from .ThresNestedUnet import NestedUNet as ThresNestedUnet
+from .ReluNestedUnet import NestedUNet as ReluNestedUnet
 import numpy as np
 
 
@@ -117,7 +125,7 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     return net
 
 
-def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[]):
+def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], lambda_uppscale=2):
     """Create a generator
 
     Parameters:
@@ -156,10 +164,86 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'unet_256':
         net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'custom':
+        # not change anything
         net = CustomGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG == 'unet_nested':
+        # not good testing
+        net = UnetNestedGenerator(input_nc)
+    elif netG == 'dc_unet_nested':
+        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=1)
+    elif netG == 'new_dcupp':
+        net = NewDCUPP(input_nc, output_nc, upp_scale=lambda_uppscale)
+    elif netG == 'ganopc_unet':
+        net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG == 'vdsr_dcupp':
+        net = VDSR_UNet(input_nc)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
+
+
+def define_G0(input_nc, output_nc, ngf, netG0, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], lambda_tanh_scale=1.0, lambda_uppscale=2):
+    """Create a generator
+
+    Parameters:
+        input_nc (int) -- the number of channels in input images
+        output_nc (int) -- the number of channels in output images
+        ngf (int) -- the number of filters in the last conv layer
+        netG0 (str) -- the architecture's name: resnet_9blocks | resnet_6blocks | unet_256 | unet_128
+        norm (str) -- the name of normalization layers used in the network: batch | instance | none
+        use_dropout (bool) -- if use dropout layers.
+        init_type (str)    -- the name of our initialization method.
+        init_gain (float)  -- scaling factor for normal, xavier and orthogonal.
+        gpu_ids (int list) -- which GPUs the network runs on: e.g., 0,1,2
+
+    Returns a generator
+
+    Our current implementation provides two types of generators:
+        U-Net: [unet_128] (for 128x128 input images) and [unet_256] (for 256x256 input images)
+        The original U-Net paper: https://arxiv.org/abs/1505.04597
+
+        Resnet-based generator: [resnet_6blocks] (with 6 Resnet blocks) and [resnet_9blocks] (with 9 Resnet blocks)
+        Resnet-based generator consists of several Resnet blocks between a few downsampling/upsampling operations.
+        We adapt Torch code from Justin Johnson's neural style transfer project (https://github.com/jcjohnson/fast-neural-style).
+
+
+    The generator has been initialized by <init_net>. It uses RELU for non-linearity.
+    """
+    net = None
+    norm_layer = get_norm_layer(norm_type=norm)
+
+    if netG0 == 'resnet_9blocks':
+        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9)
+    elif netG0 == 'resnet_6blocks':
+        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6)
+    elif netG0 == 'unet_128':
+        net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG0 == 'unet_256':
+        net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG0 == 'custom':
+        # not change anything
+        net = CustomGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG0 == 'unet_nested':
+        # not good testing
+        net = UnetNestedGenerator(input_nc)
+    elif netG0 == 'dc_unet_nested':
+        net = DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o=lambda_tanh_scale)
+    elif netG0 == 'new_dcupp':
+        net = NewDCUPP(input_nc, output_nc, upp_scale=lambda_uppscale)
+    elif netG0 == 'shuffle_dcupp':
+        net = ShuffleNestedUnet(input_nc)
+    elif netG0 == 'shuffle_unet':
+        net = ShuffleUnet(input_nc)
+    elif netG0 == 'thres_dcupp':
+        net = ThresNestedUnet(input_nc)
+    elif netG0 == 'relu_dcupp':
+        net = ReluNestedUnet(input_nc)
+    elif netG0 == 'vdsr_dcupp':
+        net = VDSR_UNet(input_nc)
+    else:
+        raise NotImplementedError('Generator0 model name [%s] is not recognized' % netG0)
+    return init_net(net, init_type, init_gain, gpu_ids)
+
 
 
 def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[]):
@@ -199,6 +283,24 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer)
     elif netD == 'n_layers':  # more options
         net = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer)
+    elif netD == 'naive_nl':
+        net = NaiveNLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive2_nl':
+        net = Naive2NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive3_nl':
+        net = Naive3NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive4_nl':
+        net = Naive4NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive5_nl':
+        net = Naive5NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive6_nl':
+        net = Naive6NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive7_nl':
+        net = Naive7NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive8_nl':
+        net = Naive8NLayerDiscriminator(input_nc, norm_layer=norm_layer)
+    elif netD == 'naive9_nl':
+        net = Naive9NLayerDiscriminator(input_nc, norm_layer=norm_layer)
     elif netD == 'pixel':     # classify if each pixel is real or fake
         net = PixelDiscriminator(input_nc, ndf, norm_layer=norm_layer)
     else:
@@ -501,7 +603,26 @@ class CustomGenerator(nn.Module):
         """Standard forward"""
         return self.model(input)
 
-
+def UnetNestedGenerator(input_nc):
+    """create a unet_nested model"""
+    return NestedUNet(input_nc = input_nc)
+    # def __init__(self, input_nc):
+    #     """
+    #     Construct a unet_nested structure
+    #     :parameter
+    #         input_nc(int) : input channel
+    #     """
+    #     super(UnetNestedGenerator, self).__init__()
+    #
+    #     # construct unet_nested structure
+    #     self.model = NestedUNet(input_nc = input_nc)
+    #     # self.model = UNetNested(in_channels=input_nc)
+    #
+    # def forward(self, input):
+    #     return
+def DCGANUnetNestedGenerator(input_nc, output_nc, lambda_uppscale, lambda_o):
+    """create a unet_nested model"""
+    return DCGANNestedUNet(input_nc = input_nc, output_nc=output_nc, lambda_o=lambda_o, upp_scale=lambda_uppscale)
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------
@@ -618,6 +739,254 @@ class NLayerDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
+
+class NaiveNLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(NaiveNLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+class Naive2NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive2NLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.5)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+class Naive3NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive3NLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.2)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+class Naive4NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive4NLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.8)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+class Naive5NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive5NLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Dropout2d(p=0.5)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+class Naive6NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive6NLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Dropout2d(p=0.5)]
+        sequence += [nn.Conv2d(ndf, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Dropout2d(p=0.5)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+
+
+class Naive7NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive7NLayerDiscriminator, self).__init__()
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, 1, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+
+
+class Naive8NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive8NLayerDiscriminator, self).__init__()
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, 1, kernel_size=kw, stride=1, padding=padw)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
+
+
+class Naive9NLayerDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=8, n_layers=1, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(Naive9NLayerDiscriminator, self).__init__()
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, 1, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence += [nn.Dropout2d(p=0.5)]
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
+
 
 
 class PixelDiscriminator(nn.Module):

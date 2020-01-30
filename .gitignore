@@ -1,6 +1,6 @@
 .DS_Store
 debug*
-datasets/
+docs/
 checkpoints/
 results/
 build/
@@ -41,6 +41,7 @@ test/.coverage
 test/data/legacy_serialized.pt
 *~
 .idea
+<<<<<<< HEAD
 .vscode/
 docs/Dockerfile
 docs/calibreq.assets
@@ -70,3 +71,6 @@ docs/stage3rec.assets
 docs/stage3rec.md
 docs/tips.md
 docs/workflow.md
+=======
+.vscode
+>>>>>>> 241551de0d458115212770ac26e43cca06fd820e
