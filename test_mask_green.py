@@ -32,9 +32,9 @@ import numpy as np
 from options.test_options import TestOptions
 from data import create_dataset
 from models import create_model
-from util.visualizer import save_images
 from util import html
-from metrics import SegmentationMetric
+from util.visualizer import save_images
+from util.metrics import SegmentationMetric
 from tqdm import tqdm
 
 
