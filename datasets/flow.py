@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-09 20:19:13
-@LastEditTime: 2020-03-11 21:25:09
+@LastEditTime: 2020-03-11 22:41:09
 @Contact: cgjhaha@qq.com
 @Description: the gds to png flow
 
@@ -31,13 +31,13 @@ parser.add_argument('--out_folder', type=str, required=True, help='output data f
 args = parser.parse_args()
 
 
-def save_im(imA, imB, dataset_type, sub_type, item_name, args)
+def save_im(imA, imB, dataset_type, sub_type, item_name, args):
     pathA = os.path.join(args.out_folder, sub_type, dataset_type+'A')
     pathB = os.path.join(args.out_folder, sub_type, dataset_type+'B')
     pathA = os.path.join(pathA, item_name+'.png')
     pathB = os.path.join(pathB, item_name+'.png')
     imA.save(pathA)
-    imB.save(pathA)
+    imB.save(pathB)
 
 def gen_data(dataset, dataset_type, args):
     print('generating {} set'.format(dataset_type))
@@ -75,7 +75,11 @@ def prepare_dirs(args):
         prepare_subdirs(args, 'dls')
 
 def main():
-    gds_list = glob.glob("{}/*.gds".format(args.gds_path)).sort()
+    print(args)
+    if not os.path.exists(args.gds_path):
+        raise FileNotFoundError
+    gds_list = glob.glob("{}/*.gds".format(args.gds_path))
+    gds_list.sort()
     test_num = len(gds_list)//4
     test_set = gds_list[0: test_num]
     train_set = gds_list[test_num:]

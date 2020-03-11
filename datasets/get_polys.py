@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-11 14:12:16
-@LastEditTime: 2020-03-11 15:29:23
+@LastEditTime: 2020-03-11 22:14:25
 @Contact: cgjhaha@qq.com
 @Description: get polys from a gds file.
 '''
@@ -20,8 +20,9 @@ from consts import LAYERS
 '''
 def get_polys(infile, args):
     clipsize = args.size
+    dtype = 0
     gdsii = gdspy.GdsLibrary(unit=1e-9)
-    gdsii.read_gds(GdsIn,units='convert')
+    gdsii.read_gds(infile,units='convert')
     cell = gdsii.top_level()[0]
     bbox = cell.get_bounding_box()
     width = int((bbox[1,0]-bbox[0,0]))
