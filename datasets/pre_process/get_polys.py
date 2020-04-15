@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-11 14:12:16
-@LastEditTime: 2020-03-11 22:14:25
+@LastEditTime: 2020-03-15 14:57:03
 @Contact: cgjhaha@qq.com
 @Description: get polys from a gds file.
 '''
@@ -16,10 +16,15 @@ from consts import LAYERS
 @param {type}
     infile str
     args argparse.args
-@return: polys {}
+@return: polys {
+    'design': [],
+    'sraf': [],
+    'mask': [],
+    'wafer': []
+}
 '''
 def get_polys(infile, args):
-    clipsize = args.size
+    clipsize = args.load_size
     dtype = 0
     gdsii = gdspy.GdsLibrary(unit=1e-9)
     gdsii.read_gds(infile,units='convert')
@@ -43,6 +48,24 @@ def get_polys(infile, args):
         polys[name] = polyset
     return polys
 
+def get_poly_vianum(infile, args):
+    clipsize = args.load_size
+    dtype = 0
+    gdsii = gdspy.GdsLibrary(unit=1e-9)
+    gdsii.read_gds(infile,units='convert')
+    cell = gdsii.top_level()[0]
+    bbox = cell.get_bounding_box()
+    width = int((bbox[1,0]-bbox[0,0]))
+    height= int((bbox[1,1]-bbox[0,1]))
+    w_offset = int(bbox[0,0] - (clipsize-width)/2)
+    h_offset = int(bbox[0,1] - (clipsize-height)/2)
+    polys = {}
+    try:
+        polyset = cell.get_polygons(by_spec=True)[(LAYERS['design'],dtype)]
+    except:
+        print('layer via: 0 not found, skipping...')
+        return None
+    return len(polyset)
 
 # def gds2img(Infolder, Infile, ImgOut):
 #     GdsIn = os.path.join(Infolder, Infile)

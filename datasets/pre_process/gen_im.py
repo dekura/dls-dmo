@@ -1,17 +1,16 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-11 17:40:47
-@LastEditTime: 2020-03-11 22:36:39
+@LastEditTime: 2020-03-15 14:57:53
 @Contact: cgjhaha@qq.com
 @Description: generate images
 '''
-
 from PIL import Image, ImageDraw
 from consts import LAYERS
 
 
 def gen_im_by_layer(polys, layers, args):
-    clipsize = args.size
+    clipsize = args.load_size
     im = Image.new("RGB", (clipsize, clipsize))
     im_r = im.getchannel('R')
     im_g = im.getchannel('G')

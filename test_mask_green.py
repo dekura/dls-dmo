@@ -74,6 +74,7 @@ if __name__ == '__main__':
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
     metric = SegmentationMetric(2)
     tbar = tqdm(dataset)
+    opt.num_test = min(opt.num_test, len(tbar))
     if opt.eval:
         model.eval()
     finalAcc , finalmIoU = 0, 0

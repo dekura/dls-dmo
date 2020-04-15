@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-11 15:03:02
-@LastEditTime: 2020-03-11 20:53:43
+@LastEditTime: 2020-03-15 15:30:31
 @Contact: cgjhaha@qq.com
 @Description: some consts
 '''
@@ -13,4 +13,4 @@ LAYERS = {
     'wafer': 200
 }
 
-DIRS = ['trainA', 'trainB', 'testA', 'testB']
+DIRS = ['train', 'test' , 'testbg']
