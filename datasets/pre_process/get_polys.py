@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-11 14:12:16
-@LastEditTime: 2020-03-15 14:57:03
+@LastEditTime: 2020-04-15 11:08:07
 @Contact: cgjhaha@qq.com
 @Description: get polys from a gds file.
 '''
@@ -24,6 +24,14 @@ from consts import LAYERS
 }
 '''
 def get_polys(infile, args):
+    layers = LAYERS
+    if args.gen_only_test:
+        layers = {
+                'design': 0,
+                'mask': 1,
+                'sraf': 2
+            }
+
     clipsize = args.load_size
     dtype = 0
     gdsii = gdspy.GdsLibrary(unit=1e-9)
@@ -35,7 +43,7 @@ def get_polys(infile, args):
     w_offset = int(bbox[0,0] - (clipsize-width)/2)
     h_offset = int(bbox[0,1] - (clipsize-height)/2)
     polys = {}
-    for name, num in LAYERS.items():
+    for name, num in layers.items():
         try:
             polyset = cell.get_polygons(by_spec=True)[(num,dtype)]
         except:

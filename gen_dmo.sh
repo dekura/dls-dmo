@@ -1,7 +1,7 @@
-phase='train'
-# phase='test'
+# phase='train'
+phase='test'
 
-name='ovia2pixwu1'
+name='ovia1'
 dataroot='/research/dept7/glchen/datasets/dlsopc_datasets/viasep/via2/dmo'
 
 # model='pix2pix'

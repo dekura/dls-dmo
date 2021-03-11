@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-09 20:19:13
-@LastEditTime: 2020-03-17 18:19:46
+@LastEditTime: 2020-04-15 11:07:41
 @Contact: cgjhaha@qq.com
 @Description: the gds to png flow
 
@@ -40,6 +40,8 @@ parser.add_argument('--set_byvia', default=False, action='store_true', help='whe
 parser.add_argument('--gen_via_lists', type=str, default='1,2', help='which vianum subdataset to gen, 1,2,3,4')
 parser.add_argument('--gds_path', type=str, required=True, help='the input gds path')
 parser.add_argument('--out_folder', type=str, required=True, help='output data folder')
+parser.add_argument('--gen_only_test', default=False, action='store_true', help='whether gen only test set')
+
 # out_folder/dmo/trainA
 # out_folder/dls/trainA
 args = parser.parse_args()
@@ -162,14 +164,16 @@ def main():
             test_set, train_set = sets
             gen_data(test_set, 'test', args)
             gen_data(test_set, 'testbg', args)
-            gen_data(train_set, 'train', args)
+            if not args.gen_only_test:
+                gen_data(train_set, 'train', args)
     else:
         args._root_folder = args.out_folder
         prepare_dirs(args)
         test_set, train_set = gen_dataset(args)
         gen_data(test_set, 'test', args)
         gen_data(test_set, 'testbg', args)
-        gen_data(train_set, 'train', args)
+        if not args.gen_only_test:
+            gen_data(train_set, 'train', args)
 
 if __name__ == '__main__':
     main()
