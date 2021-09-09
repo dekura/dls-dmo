@@ -1,7 +1,7 @@
 '''
 @Author: Guojin Chen
 @Date: 2020-03-11 14:12:16
-@LastEditTime: 2020-04-15 11:08:07
+LastEditTime: 2021-09-08 12:47:22
 @Contact: cgjhaha@qq.com
 @Description: get polys from a gds file.
 '''
@@ -29,7 +29,8 @@ def get_polys(infile, args):
         layers = {
                 'design': 0,
                 'mask': 1,
-                'sraf': 2
+                'sraf': 2,
+                'wafer': 200
             }
 
     clipsize = args.load_size
